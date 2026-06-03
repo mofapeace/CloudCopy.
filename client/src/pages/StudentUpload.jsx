@@ -194,6 +194,10 @@ export default function StudentUpload() {
           Upload your file, get a PIN, and pick it up at a partner shop.
         </p>
 
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '1rem' }}>
+          <button className="btn btn-secondary" onClick={() => navigate('/login?mode=signup')}>Sign Up</button>
+        </div>
+
         <form onSubmit={handleUpload}>
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Select Print Shop</label>

@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Cloud, Mail, Lock, ArrowRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 export default function StudentLogin() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [mode, setMode] = useState('login'); // 'login' or 'signup'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,6 +41,12 @@ export default function StudentLogin() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const m = params.get('mode');
+    if (m === 'signup') setMode('signup');
+  }, [location.search]);
 
   const remainingUses = 5 - parseInt(localStorage.getItem('cloudcopy_free_uses') || '0', 10);
   const isLocked = remainingUses <= 0;
