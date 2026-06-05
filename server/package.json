@@ -13,7 +13,6 @@
   "description": "",
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",
-    "pg": "^8.11.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
@@ -21,6 +20,8 @@
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.1.1",
     "node-cron": "^4.2.1",
-    "pdf-parse": "^2.4.5"
+    "pdf-lib": "^1.17.1",
+    "pdf-parse": "^2.4.5",
+    "pg": "^8.11.0"
   }
 }

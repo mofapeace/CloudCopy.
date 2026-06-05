@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const pdfParse = require('pdf-parse');
+const { PDFDocument } = require('pdf-lib');
 const { generatePin } = require('../services/pinGenerator');
 const { calculatePrice } = require('../services/pricing');
 const { uploadDocument } = require('../services/storage');
@@ -21,8 +21,8 @@ router.post('/', upload.single('file'), async (req, res) => {
     // 1. Calculate pages
     let pageCount = 1;
     if (file.mimetype === 'application/pdf') {
-      const pdfData = await pdfParse(file.buffer);
-      pageCount = pdfData.numpages;
+      const pdfDoc = await PDFDocument.load(file.buffer);
+      pageCount = pdfDoc.getPageCount();
     } else if (file.mimetype.startsWith('image/')) {
       pageCount = 1; // Images count as 1 page
     }
