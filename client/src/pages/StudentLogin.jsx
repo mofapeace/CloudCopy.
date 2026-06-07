@@ -37,7 +37,7 @@ export default function StudentLogin() {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
         localStorage.setItem('cloudcopy_free_uses', '0');
-        navigate('/');
+        navigate('/student');
       }
     } catch (err) {
       setError(err.message || 'Authentication failed');

@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { LogOut, Shield } from 'lucide-react';
 import JobCard from '../components/JobCard';
 import OfflineToggle from '../components/OfflineToggle';
-import TwoFactorModal from '../components/TwoFactorModal';
 import api from '../lib/api';
 
 export default function OperatorDashboard() {
@@ -11,10 +10,10 @@ export default function OperatorDashboard() {
   const [pin, setPin] = useState('');
   const [job, setJob] = useState(null);
   const [error, setError] = useState('');
-  const [show2FA, setShow2FA] = useState(false);
   const [shopId] = useState('00000000-0000-0000-0000-000000000000');
   const [operatorInfo, setOperatorInfo] = useState(null);
   const [trialDaysLeft, setTrialDaysLeft] = useState(null);
+  const [queue, setQueue] = useState([]);
 
   useEffect(() => {
     const stored = localStorage.getItem('cloudcopy_operator');
@@ -26,29 +25,43 @@ export default function OperatorDashboard() {
       const daysLeft = Math.max(0, Math.ceil((trialEnd - now) / (1000 * 60 * 60 * 24)));
       setTrialDaysLeft(daysLeft);
     }
-  }, []);
+    fetchQueue();
+  }, [shopId]);
+
+  const fetchQueue = async () => {
+    try {
+      const res = await api.get(`/jobs/shop/${shopId}`);
+      setQueue(res.data);
+    } catch (err) {
+      console.error('Failed to fetch queue', err);
+    }
+  };
 
   const handleInitialVerify = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setError('');
     if (pin.length >= 4) {
-      setShow2FA(true);
+      try {
+        const res = await api.post('/pin/verify', { pin, shopId });
+        setJob(res.data);
+      } catch (err) {
+        const msg = err.response?.data?.error || 'Invalid PIN or expired job.';
+        setError(msg);
+        setJob(null);
+      }
     }
   };
 
-  const handle2FAVerify = async (code) => {
-    try {
-      const res = await api.post('/pin/verify', { pin, shopId, twoFactorCode: code });
-      setJob(res.data);
-      setShow2FA(false);
-      setError('');
-    } catch (err) {
-      const msg = err.response?.data?.error || 'Invalid PIN, expired job, or wrong 2FA code.';
-      setError(msg);
-      setJob(null);
-      setShow2FA(false);
+  // Poll for student confirmation if job is pending confirmation
+  useEffect(() => {
+    let interval;
+    if (job && !job.studentConfirmed) {
+      interval = setInterval(() => {
+        handleInitialVerify();
+      }, 3000);
     }
-  };
+    return () => clearInterval(interval);
+  }, [job, pin, shopId]);
 
   const handleRelease = () => {
     setJob(null);
@@ -145,18 +158,46 @@ export default function OperatorDashboard() {
       {job && (
         <div className="animate-fade-in">
           <h3 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--accent-success)', display: 'inline-block' }} />
-            Job Ready to Release
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: job.studentConfirmed ? 'var(--accent-success)' : 'var(--accent-warning)', display: 'inline-block' }} />
+            {job.studentConfirmed ? 'Job Ready to Release' : 'Waiting for Student Confirmation...'}
           </h3>
-          <JobCard job={job} onRelease={handleRelease} />
+          <div style={{ opacity: job.studentConfirmed ? 1 : 0.6, pointerEvents: job.studentConfirmed ? 'auto' : 'none' }}>
+            <JobCard job={job} onRelease={handleRelease} />
+          </div>
+          {!job.studentConfirmed && (
+             <div style={{ marginTop: '1rem', textAlign: 'center', color: 'var(--accent-warning)', fontSize: '0.9rem' }}>
+               Please ask the student to click "Confirm Print" in their account.
+             </div>
+          )}
         </div>
       )}
 
-      <TwoFactorModal 
-        isOpen={show2FA} 
-        onClose={() => setShow2FA(false)} 
-        onVerify={handle2FAVerify} 
-      />
+      {/* Pending Queue */}
+      <div className="glass-card" style={{ marginTop: '2rem' }}>
+        <h3 style={{ marginBottom: '1rem' }}>Pending Queue ({queue.length})</h3>
+        {queue.length === 0 ? (
+          <p style={{ color: 'var(--text-secondary)' }}>No pending jobs.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {queue.map(qJob => (
+              <div key={qJob.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', background: 'rgba(0,0,0,0.03)', borderRadius: '8px' }}>
+                <div>
+                  <strong>{qJob.student_name}</strong>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                    {qJob.page_count} pages • {qJob.color ? 'Color' : 'B&W'} • {qJob.copies} copies
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <strong>{qJob.price_cfa} CFA</strong>
+                  <div style={{ fontSize: '0.8rem', color: qJob.student_confirmed ? 'var(--accent-success)' : 'var(--text-secondary)' }}>
+                    {qJob.student_confirmed ? 'Confirmed' : 'Waiting for student'}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

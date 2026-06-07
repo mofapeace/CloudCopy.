@@ -12,7 +12,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.post('/', upload.single('file'), async (req, res) => {
   try {
     const file = req.file;
-    const { studentName, color, doubleSided, copies, shopId } = req.body;
+    const { studentName, color, doubleSided, copies, shopId, user_email } = req.body;
 
     if (!file || !studentName || !shopId) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -47,6 +47,8 @@ router.post('/', upload.single('file'), async (req, res) => {
     // 5. Save to database
     const { data: job, error } = await supabase.from('jobs').insert([{
       shop_id: shopId,
+      user_email: user_email || null,
+      raw_pin: pin,
       pin_hash: hash,
       student_name: studentName,
       file_path: filePath,

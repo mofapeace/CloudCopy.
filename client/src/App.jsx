@@ -1,9 +1,10 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { Cloud, UploadCloud, MapPin, Store } from 'lucide-react';
+import { Cloud, UploadCloud, MapPin, Store, FileText } from 'lucide-react';
 import LandingPage from './pages/LandingPage';
 import StudentUpload from './pages/StudentUpload';
 import StudentLogin from './pages/StudentLogin';
+import StudentDashboard from './pages/StudentDashboard';
 import OperatorDashboard from './pages/OperatorDashboard';
 import ShopLogin from './pages/ShopLogin';
 import ShopMap from './pages/ShopMap';
@@ -40,6 +41,10 @@ function StudentNavbar() {
       <NavLink to="/student">
         <UploadCloud size={17} />
         Upload
+      </NavLink>
+      <NavLink to="/student/dashboard">
+        <FileText size={17} />
+        My Prints
       </NavLink>
       <NavLink to="/map">
         <MapPin size={17} />
@@ -89,6 +94,7 @@ function AppRouter() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/student" element={<StudentUpload />} />
+          <Route path="/student/dashboard" element={<StudentDashboard />} />
           <Route path="/login" element={<StudentLogin />} />
           <Route path="/map" element={<ShopMap />} />
           <Route path="/operator/login" element={<ShopLogin />} />

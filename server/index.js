@@ -7,6 +7,7 @@ const uploadRoute = require('./routes/upload');
 const pinRoute = require('./routes/pin');
 const queueRoute = require('./routes/queue');
 const shopRoute = require('./routes/shop');
+const jobsRoute = require('./routes/jobs');
 
 // Initialize cleanup service cron jobs
 require('./services/cleanup');
@@ -22,6 +23,7 @@ app.use('/api/upload', uploadRoute);
 app.use('/api/pin', pinRoute);
 app.use('/api/queue', queueRoute);
 app.use('/api/shop', shopRoute);
+app.use('/api/jobs', jobsRoute);
 
 app.get('/', (req, res) => {
   res.json({

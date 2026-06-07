@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import PrintCustomizer from '../components/PrintCustomizer';
 import PinDisplay from '../components/PinDisplay';
 import api from '../lib/api';
+import { supabase } from '../lib/supabase';
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Use CDN for the worker
@@ -41,17 +42,44 @@ export default function StudentUpload() {
   
   const [isUploading, setIsUploading] = useState(false);
   const [result, setResult] = useState(null);
+  const [user, setUser] = useState(null);
   const fileInputRef = useRef(null);
 
   useEffect(() => {
+    // Check Supabase session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setUser(session.user);
+        if (session.user.user_metadata?.name) {
+          setStudentName(session.user.user_metadata.name);
+        }
+      }
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+        if (session.user.user_metadata?.name && !studentName) {
+          setStudentName(session.user.user_metadata.name);
+        }
+      } else {
+        setUser(null);
+      }
+    });
+
     const uses = parseInt(localStorage.getItem('cloudcopy_free_uses') || '0', 10);
-    if (uses >= 5) navigate('/login');
+    // If not logged in and used >= 5 free prints, redirect to login
+    if (!user && uses >= 5) navigate('/login');
 
     api.get('/shop').then((res) => {
       setShops(res.data);
       if (res.data.length > 0) setShopId(res.data[0].id);
     }).catch(console.error);
-  }, [navigate]);
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [navigate, user]);
 
   const handleFile = async (selectedFile) => {
     if (selectedFile) {
@@ -195,7 +223,24 @@ export default function StudentUpload() {
         </p>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginBottom: '1rem' }}>
-          <button className="btn btn-secondary" onClick={() => navigate('/login?mode=signup')}>Sign Up</button>
+          {user ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              <span>{user.email}</span>
+              <button 
+                className="btn btn-secondary" 
+                style={{ padding: '0.4rem 0.75rem' }}
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  localStorage.removeItem('cloudcopy_free_uses');
+                  navigate('/login');
+                }}
+              >
+                Log Out
+              </button>
+            </div>
+          ) : (
+            <button className="btn btn-secondary" onClick={() => navigate('/login?mode=signup')}>Sign Up</button>
+          )}
         </div>
 
         <form onSubmit={handleUpload}>

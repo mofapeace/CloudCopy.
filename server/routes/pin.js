@@ -11,12 +11,7 @@ router.post('/verify', async (req, res) => {
       return res.status(400).json({ error: 'Missing pin or shopId' });
     }
 
-    // Mock 2FA Validation
-    // If code is not provided, we could return a specific status asking for it.
-    // For this demo, we assume the frontend will pass '123456' as the mock code.
-    if (!twoFactorCode || twoFactorCode !== '123456') {
-      return res.status(403).json({ error: 'Invalid or missing 2FA code', requires2FA: true });
-    }
+    // Removed mock 2FA validation
 
     const { data: jobs, error } = await supabase
       .from('jobs')
@@ -46,7 +41,8 @@ router.post('/verify', async (req, res) => {
       color: matchedJob.color,
       copies: matchedJob.copies,
       price: matchedJob.price_cfa,
-      createdAt: matchedJob.created_at
+      createdAt: matchedJob.created_at,
+      studentConfirmed: matchedJob.student_confirmed
     });
 
   } catch (err) {
@@ -60,6 +56,18 @@ router.post('/release', async (req, res) => {
   try {
     const { jobId } = req.body;
     
+    // Check if student has confirmed
+    const { data: currentJob, error: fetchError } = await supabase
+      .from('jobs')
+      .select('student_confirmed')
+      .eq('id', jobId)
+      .single();
+      
+    if (fetchError) throw fetchError;
+    if (!currentJob.student_confirmed) {
+      return res.status(403).json({ error: 'Student has not confirmed this print job yet.' });
+    }
+
     const { data: job, error } = await supabase
       .from('jobs')
       .update({ status: 'printing' })
