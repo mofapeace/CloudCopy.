@@ -12,6 +12,7 @@ export default function ShopLogin() {
   const [location, setLocation] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [checkEmail, setCheckEmail] = useState(false);
 
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -23,7 +24,10 @@ export default function ShopLogin() {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { shopName, location, role: 'operator' } }
+          options: { 
+            data: { shopName, location, role: 'operator' },
+            emailRedirectTo: window.location.origin
+          }
         });
         if (signUpError) throw signUpError;
 
@@ -33,7 +37,7 @@ export default function ShopLogin() {
           shopName,
           trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
         }));
-        navigate('/operator');
+        setCheckEmail(true);
       } else {
         const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
@@ -122,7 +126,28 @@ export default function ShopLogin() {
           </button>
         </div>
 
-        <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        {checkEmail ? (
+          <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
+            <div style={{ display: 'inline-flex', padding: '1rem', background: 'rgba(255, 149, 0, 0.1)', borderRadius: '50%', marginBottom: '1rem' }}>
+              <Mail size={32} color="var(--accent-secondary)" />
+            </div>
+            <h3 style={{ marginBottom: '0.5rem', fontSize: '1.25rem' }}>Check your email</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+              We've sent a confirmation link to <strong>{email}</strong>. Please click the link to verify your operator account and start your trial.
+            </p>
+            <button 
+              className="btn btn-primary" 
+              onClick={() => {
+                setCheckEmail(false);
+                setMode('login');
+              }}
+              style={{ width: '100%', background: 'var(--accent-secondary)' }}
+            >
+              Back to Login
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {mode === 'register' && (
             <>
               <div style={{ position: 'relative' }}>
@@ -190,6 +215,7 @@ export default function ShopLogin() {
             {!loading && <ArrowRight size={18} />}
           </button>
         </form>
+        )}
       </div>
     </div>
   );
