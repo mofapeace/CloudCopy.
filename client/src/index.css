@@ -257,9 +257,6 @@ h1, h2, h3, h4, h5, h6 {
 
 .header {
   padding: 1.5rem 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
   background: rgba(245, 245, 247, 0.8);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -269,6 +266,12 @@ h1, h2, h3, h4, h5, h6 {
   border-bottom: 1px solid rgba(0,0,0,0.05);
 }
 
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .logo {
   font-size: 1.5rem;
   font-weight: 700;
@@ -276,4 +279,20 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   gap: 0.5rem;
   color: var(--text-primary);
+}
+
+@media (max-width: 600px) {
+  .header {
+    padding: 1rem 0;
+  }
+  
+  .header-container {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .nav-link {
+    font-size: 0.85rem !important;
+    padding: 0.35rem 0.5rem !important;
+  }
 }

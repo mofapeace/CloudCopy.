@@ -17,6 +17,7 @@ function NavLink({ to, children }) {
   return (
     <Link
       to={to}
+      className="nav-link"
       style={{
         color: isActive ? 'var(--accent-primary)' : 'var(--text-secondary)',
         display: 'flex',
@@ -80,7 +81,7 @@ function AppRouter() {
     <>
       {showNavbar && (
         <header className="header">
-          <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="container header-container">
             <Link to="/" className="logo">
               <Cloud color="var(--accent-primary)" size={26} />
               CloudCopy
