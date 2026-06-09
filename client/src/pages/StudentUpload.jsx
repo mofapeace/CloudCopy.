@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { UploadCloud, FileText } from 'lucide-react';
+import { UploadCloud, FileText, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import PrintCustomizer from '../components/PrintCustomizer';
 import PinDisplay from '../components/PinDisplay';
+import TwoFactorModal from '../components/TwoFactorModal';
 import api from '../lib/api';
 import { supabase } from '../lib/supabase';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -38,6 +39,8 @@ export default function StudentUpload() {
   const [studentName, setStudentName] = useState('');
   const [shopId, setShopId] = useState('');
   const [shops, setShops] = useState([]);
+  const [reserveAtShop, setReserveAtShop] = useState(false);
+  const [targetShopId, setTargetShopId] = useState('');
   const [options, setOptions] = useState({ color: false, doubleSided: false, copies: 1 });
   
   const [isUploading, setIsUploading] = useState(false);
@@ -45,11 +48,18 @@ export default function StudentUpload() {
   const [user, setUser] = useState(null);
   const fileInputRef = useRef(null);
 
+  // 2FA states
+  const [show2FA, setShow2FA] = useState(false);
+  const [twoFACode, setTwoFACode] = useState('');
+  const [confirmingTwoFA, setConfirmingTwoFA] = useState(false);
+  const [twoFAError, setTwoFAError] = useState('');
+
   useEffect(() => {
     // Check Supabase session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         setUser(session.user);
+        if (session.user.user_metadata?.isPro) setReserveAtShop(true);
         if (session.user.user_metadata?.name) {
           setStudentName(session.user.user_metadata.name);
         }
@@ -59,6 +69,7 @@ export default function StudentUpload() {
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         setUser(session.user);
+        if (session.user.user_metadata?.isPro) setReserveAtShop(true);
         if (session.user.user_metadata?.name && !studentName) {
           setStudentName(session.user.user_metadata.name);
         }
@@ -67,13 +78,16 @@ export default function StudentUpload() {
       }
     });
 
-    const uses = parseInt(localStorage.getItem('cloudcopy_free_uses') || '0', 10);
+    const uses = parseInt(localStorage.getItem('cloudkopii_free_uses') || '0', 10);
     // If not logged in and used >= 5 free prints, redirect to login
     if (!user && uses >= 5) navigate('/login');
 
     api.get('/shop').then((res) => {
       setShops(res.data);
-      if (res.data.length > 0) setShopId(res.data[0].id);
+      if (res.data.length > 0) {
+        setShopId(res.data[0].id);
+        if (!targetShopId) setTargetShopId(res.data[0].id);
+      }
     }).catch(console.error);
 
     return () => {
@@ -176,16 +190,23 @@ export default function StudentUpload() {
     formData.append('doubleSided', options.doubleSided);
     formData.append('copies', options.copies);
     formData.append('colorPagesMap', JSON.stringify(colorPagesMap));
+    // Pro reservation fields
+    formData.append('isPro', reserveAtShop ? 'true' : 'false');
+    formData.append('targetShopId', reserveAtShop ? targetShopId : '');
 
     try {
       const res = await api.post('/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
-      const uses = parseInt(localStorage.getItem('cloudcopy_free_uses') || '0', 10);
-      localStorage.setItem('cloudcopy_free_uses', (uses + 1).toString());
+      const uses = parseInt(localStorage.getItem('cloudkopii_free_uses') || '0', 10);
+      localStorage.setItem('cloudkopii_free_uses', (uses + 1).toString());
 
-      setResult({ ...res.data, shopName: shops.find(s => s.id === shopId)?.name });
+      const displayShopName = reserveAtShop ? shops.find(s => s.id === targetShopId)?.name : shops.find(s => s.id === shopId)?.name;
+      setResult({ ...res.data, shopName: displayShopName });
+      setShow2FA(false);
+      setTwoFACode('');
+      setTwoFAError('');
     } catch (err) {
       alert('Upload failed: ' + (err.response?.data?.error || err.message));
     } finally {
@@ -193,10 +214,85 @@ export default function StudentUpload() {
     }
   };
 
+  const handleConfirmTwoFA = async (code) => {
+    if (!result?.job_id) {
+      setTwoFAError('No job ID found');
+      return;
+    }
+
+    setConfirmingTwoFA(true);
+    setTwoFAError('');
+
+    try {
+      await api.post('/pin/confirm-2fa', {
+        jobId: result.job_id,
+        twoFACode: code
+      });
+      
+      setShow2FA(false);
+      setTwoFACode('');
+      
+      // Show success message and reset upload
+      setTimeout(() => {
+        setResult(null);
+        setFile(null);
+        setPreviewUrls([]);
+        setColorPagesMap([]);
+        setPageCount(0);
+        alert('✅ Print confirmed! Operator will release your document to the printer.');
+        const uses = parseInt(localStorage.getItem('cloudkopii_free_uses') || '0', 10);
+        if (uses >= 5) navigate('/login');
+      }, 1500);
+    } catch (err) {
+      const errorMsg = err.response?.data?.error || err.message || 'Invalid code';
+      setTwoFAError(errorMsg);
+    } finally {
+      setConfirmingTwoFA(false);
+    }
+  };
+
   if (result) {
     return (
       <div className="container" style={{ maxWidth: '600px' }}>
-        <PinDisplay pin={result.pin} price={result.price} shopName={result.shopName} />
+        <PinDisplay pin={result.pin} price={result.price} priceMin={result.priceMin} priceMax={result.priceMax} pinMode={result.pinMode} shopName={result.shopName} />
+        
+        {/* 2FA Step */}
+        <div className="glass-card" style={{ marginTop: '2rem', background: 'rgba(0, 122, 255, 0.05)', border: '1px solid rgba(0, 122, 255, 0.2)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem', marginBottom: '1rem' }}>
+            <div style={{ padding: '0.6rem', background: 'rgba(0, 122, 255, 0.15)', borderRadius: '8px' }}>
+              <AlertCircle size={24} color="var(--accent-primary)" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>Next: Enter Verification Code</h3>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                Show the PIN to an operator. They will give you a 6-digit verification code. Enter it below to confirm your print.
+              </p>
+            </div>
+          </div>
+
+          {!show2FA ? (
+            <button 
+              className="btn btn-primary" 
+              onClick={() => setShow2FA(true)}
+              style={{ width: '100%', background: 'var(--accent-primary)' }}
+            >
+              Ready to Enter Code
+            </button>
+          ) : (
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+                Waiting for operator code...
+              </p>
+            </div>
+          )}
+        </div>
+
+        <TwoFactorModal 
+          isOpen={show2FA}
+          onVerify={handleConfirmTwoFA}
+          onClose={() => { setShow2FA(false); setTwoFAError(''); }}
+        />
+
         <div style={{ textAlign: 'center', marginTop: '2rem' }}>
           <button className="btn btn-secondary" onClick={() => { 
             setResult(null); 
@@ -204,7 +300,10 @@ export default function StudentUpload() {
             setPreviewUrls([]);
             setColorPagesMap([]);
             setPageCount(0);
-            const uses = parseInt(localStorage.getItem('cloudcopy_free_uses') || '0', 10);
+            setShow2FA(false);
+            setTwoFACode('');
+            setTwoFAError('');
+            const uses = parseInt(localStorage.getItem('cloudkopii_free_uses') || '0', 10);
             if (uses >= 5) navigate('/login');
           }}>
             Upload Another File
@@ -231,7 +330,7 @@ export default function StudentUpload() {
                 style={{ padding: '0.4rem 0.75rem' }}
                 onClick={async () => {
                   await supabase.auth.signOut();
-                  localStorage.removeItem('cloudcopy_free_uses');
+                  localStorage.removeItem('cloudkopii_free_uses');
                   navigate('/login');
                 }}
               >
@@ -257,6 +356,24 @@ export default function StudentUpload() {
                 <option key={s.id} value={s.id}>{s.name} - {s.location}</option>
               ))}
             </select>
+          </div>
+
+          {/* Reserve at specific shop (Pro users) */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem' }}>
+              <input type="checkbox" checked={reserveAtShop} onChange={e => setReserveAtShop(e.target.checked)} />
+              <span>Reserve at specific shop (Pro users)</span>
+            </label>
+
+            {reserveAtShop && (
+              <div style={{ marginTop: '0.5rem' }}>
+                <select value={targetShopId} onChange={e => setTargetShopId(e.target.value)} className="input-field" style={{ width: '100%' }}>
+                  {shops.map(s => (
+                    <option key={s.id} value={s.id}>{s.name} - {s.location}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           <div style={{ marginBottom: '1.5rem' }}>

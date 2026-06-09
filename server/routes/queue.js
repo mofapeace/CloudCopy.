@@ -9,11 +9,16 @@ router.get('/:shopId', async (req, res) => {
   try {
     const { shopId } = req.params;
 
+    // Fetch jobs that are:
+    // 1. In 'printing' status (ready to print)
+    // 2. Either Open PIN (any shop can print) OR Locked PIN for this specific shop
+    // 3. 2FA verified
     const { data: jobs, error } = await supabase
       .from('jobs')
       .select('*')
-      .eq('shop_id', shopId)
-      .eq('status', 'printing');
+      .eq('status', 'printing')
+      .eq('two_fa_verified', true)
+      .or(`pin_mode.eq.open,and(pin_mode.eq.locked,shop_id.eq.${shopId})`);
 
     if (error) throw error;
 
@@ -28,7 +33,8 @@ router.get('/:shopId', async (req, res) => {
         studentName: job.student_name,
         color: job.color,
         copies: job.copies,
-        doubleSided: job.double_sided
+        doubleSided: job.double_sided,
+        pinMode: job.pin_mode
       };
     }));
 

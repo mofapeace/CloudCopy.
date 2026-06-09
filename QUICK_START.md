@@ -104,8 +104,8 @@ Watch the terminal where uvicorn is running
 Look for POST /auth/... requests
 
 **Check Database:**
-Backend creates `cloudcopy.db` file
-Can inspect with: `sqlite3 cloudcopy.db`
+Backend creates `cloudkopii.db` file
+Can inspect with: `sqlite3 cloudkopii.db`
 
 ---
 

@@ -30,7 +30,7 @@ env/
 *.db
 *.sqlite
 *.sqlite3
-cloudcopy.db
+cloudkopii.db
 
 # IDE
 .vscode/

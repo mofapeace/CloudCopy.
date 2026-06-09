@@ -84,7 +84,7 @@ function AppRouter() {
           <div className="container header-container">
             <Link to="/" className="logo">
               <Cloud color="var(--accent-primary)" size={26} />
-              CloudCopy
+              Cloudkopii
             </Link>
             {isOperatorRoute ? <OperatorNavbar /> : <StudentNavbar />}
           </div>
@@ -110,7 +110,7 @@ function AppRouter() {
         borderTop: '1px solid var(--border-color)', 
         fontSize: '0.85rem' 
       }}>
-        <p>&copy; {new Date().getFullYear()} CloudCopy — Campus printing, unchained.</p>
+        <p>&copy; {new Date().getFullYear()} Cloudkopii — Campus printing, unchained.</p>
       </footer>
     </>
   );

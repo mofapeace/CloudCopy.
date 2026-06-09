@@ -8,6 +8,7 @@ const pinRoute = require('./routes/pin');
 const queueRoute = require('./routes/queue');
 const shopRoute = require('./routes/shop');
 const jobsRoute = require('./routes/jobs');
+const jobRoute = require('./routes/job');
 
 // Initialize cleanup service cron jobs
 require('./services/cleanup');
@@ -24,11 +25,12 @@ app.use('/api/pin', pinRoute);
 app.use('/api/queue', queueRoute);
 app.use('/api/shop', shopRoute);
 app.use('/api/jobs', jobsRoute);
+app.use('/api/job', jobRoute);
 
 app.get('/', (req, res) => {
   res.json({
     status: 'ok',
-    service: 'CloudCopy API',
+    service: 'Cloudkopii API',
     endpoints: [
       'GET /health',
       'POST /api/upload',
@@ -47,5 +49,5 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`☁️ CloudCopy Server running on http://localhost:${PORT}`);
+  console.log(`☁️ Cloudkopii Server running on http://localhost:${PORT}`);
 });

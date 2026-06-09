@@ -6,6 +6,10 @@ CREATE TABLE IF NOT EXISTS shops (
     is_online BOOLEAN DEFAULT false,
     subscription_tier TEXT DEFAULT 'free',
     trial_ends_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() + INTERVAL '1 month',
+    -- Pricing (in CFA per page)
+    bw_price_per_page INTEGER DEFAULT 15,
+    color_price_per_page INTEGER DEFAULT 25,
+    double_sided_discount INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -42,6 +46,12 @@ CREATE TABLE IF NOT EXISTS jobs (
     copies INTEGER DEFAULT 1,
     price_cfa INTEGER NOT NULL,
     status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'printing', 'printed', 'expired')),
+    -- PIN mode: 'open' = any shop, 'locked' = specific shop only
+    pin_mode TEXT DEFAULT 'open' CHECK (pin_mode IN ('open', 'locked')),
+    -- 2FA fields
+    two_fa_code TEXT,
+    two_fa_verified BOOLEAN DEFAULT false,
+    two_fa_verified_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     printed_at TIMESTAMP WITH TIME ZONE
 );

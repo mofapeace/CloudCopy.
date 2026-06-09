@@ -2,7 +2,7 @@ import React from 'react';
 import { Printer, FileText } from 'lucide-react';
 import api from '../lib/api';
 
-export default function JobCard({ job, onRelease }) {
+export default function JobCard({ job, onRelease, disabled = false }) {
   const handleRelease = async () => {
     try {
       await api.post('/pin/release', { jobId: job.id });
@@ -13,7 +13,7 @@ export default function JobCard({ job, onRelease }) {
   };
 
   return (
-    <div className="glass-card" style={{ padding: '1.5rem' }}>
+    <div className="glass-card" style={{ padding: '1.5rem', opacity: disabled ? 0.6 : 1, pointerEvents: disabled ? 'none' : 'auto' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <div style={{ padding: '0.6rem', background: 'rgba(0,122,255,0.1)', borderRadius: '12px' }}>
@@ -58,9 +58,9 @@ export default function JobCard({ job, onRelease }) {
         </div>
       </div>
 
-      <button className="btn btn-success" style={{ width: '100%' }} onClick={handleRelease}>
+      <button className="btn btn-success" style={{ width: '100%' }} onClick={handleRelease} disabled={disabled}>
         <Printer size={18} />
-        Release to Printer
+        {disabled ? 'Waiting for Student...' : 'Release to Printer'}
       </button>
     </div>
   );

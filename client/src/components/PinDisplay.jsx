@@ -1,10 +1,12 @@
 import React from 'react';
 import { CheckCircle, MapPin, Copy } from 'lucide-react';
 
-export default function PinDisplay({ pin, price, shopName }) {
+export default function PinDisplay({ pin, price, priceMin, priceMax, pinMode, shopName }) {
   const copyPin = () => {
     navigator.clipboard.writeText(pin);
   };
+
+  const isPriceRange = priceMin !== undefined && priceMax !== undefined && priceMin !== null && priceMax !== null;
 
   return (
     <div className="glass-card animate-fade-in" style={{ textAlign: 'center' }}>
@@ -14,7 +16,9 @@ export default function PinDisplay({ pin, price, shopName }) {
       
       <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Upload Successful!</h2>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
-        Show this PIN to the operator at the print shop to release your document.
+        {pinMode === 'locked' 
+          ? 'Your print is reserved at your selected shop.'
+          : 'Show this PIN to the operator at any Cloudkopii shop to release your document.'}
       </p>
       
       {/* PIN Box */}
@@ -58,14 +62,40 @@ export default function PinDisplay({ pin, price, shopName }) {
         borderRadius: 'var(--radius-md)', 
         marginBottom: '1rem' 
       }}>
-        <span style={{ color: 'var(--text-secondary)' }}>Total Cost</span>
-        <span style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--accent-secondary)' }}>{price} CFA</span>
+        <span style={{ color: 'var(--text-secondary)' }}>
+          {isPriceRange ? 'Estimated Cost' : 'Total Cost'}
+        </span>
+        <span style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--accent-secondary)' }}>
+          {isPriceRange 
+            ? `${priceMin} - ${priceMax} CFA`
+            : `${price} CFA`}
+        </span>
       </div>
 
+      {/* Shop Info */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
         <MapPin size={16} />
-        <span>{shopName || 'Any CloudCopy Shop'}</span>
+        <span>
+          {pinMode === 'locked' 
+            ? shopName || 'Selected Cloudkopii Shop'
+            : shopName || 'Any Cloudkopii Shop'}
+        </span>
       </div>
+
+      {/* Info Box */}
+      {isPriceRange && (
+        <div style={{
+          marginTop: '1rem',
+          padding: '0.75rem',
+          background: 'rgba(59, 130, 246, 0.05)',
+          border: '1px solid rgba(59, 130, 246, 0.2)',
+          borderRadius: 'var(--radius-md)',
+          fontSize: '0.8rem',
+          color: 'var(--text-secondary)'
+        }}>
+          💡 Price varies by shop. You pay the shop's rate when you arrive.
+        </div>
+      )}
     </div>
   );
 }

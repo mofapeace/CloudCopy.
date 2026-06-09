@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const { PDFDocument } = require('pdf-lib');
 const { generatePin } = require('../services/pinGenerator');
-const { calculatePrice } = require('../services/pricing');
+const { getPriceRange, getExactPrice } = require('../services/pricing');
 const { uploadDocument } = require('../services/storage');
 const supabase = require('../supabase');
 
@@ -12,7 +12,16 @@ const upload = multer({ storage: multer.memoryStorage() });
 router.post('/', upload.single('file'), async (req, res) => {
   try {
     const file = req.file;
-    const { studentName, color, doubleSided, copies, shopId, user_email } = req.body;
+    const { 
+      studentName, 
+      color, 
+      doubleSided, 
+      copies, 
+      shopId,       // For Open PIN: shop where they'll pick up (or null for any)
+      targetShopId, // For Locked PIN: specific shop selected by Pro user
+      user_email,
+      isPro
+    } = req.body;
 
     if (!file || !studentName || !shopId) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -24,7 +33,7 @@ router.post('/', upload.single('file'), async (req, res) => {
       const pdfDoc = await PDFDocument.load(file.buffer);
       pageCount = pdfDoc.getPageCount();
     } else if (file.mimetype.startsWith('image/')) {
-      pageCount = 1; // Images count as 1 page
+      pageCount = 1;
     }
 
     // 2. Upload file to storage
@@ -33,7 +42,7 @@ router.post('/', upload.single('file'), async (req, res) => {
     // 3. Generate PIN & Hash
     const { pin, hash } = await generatePin();
 
-    // 4. Calculate price
+    // 4. Calculate price (range for Open, exact for Locked)
     const isColor = color === 'true';
     const isDoubleSided = doubleSided === 'true';
     const numCopies = parseInt(copies, 10) || 1;
@@ -42,11 +51,26 @@ router.post('/', upload.single('file'), async (req, res) => {
       if (req.body.colorPagesMap) colorPagesMap = JSON.parse(req.body.colorPagesMap);
     } catch (e) {}
 
-    const priceCfa = calculatePrice(pageCount, isColor, isDoubleSided, numCopies, colorPagesMap);
+    let priceData = {};
+    let pinMode = 'open';
+
+    if (isPro && targetShopId) {
+      // Locked PIN: Pro student selected a specific shop
+      pinMode = 'locked';
+      const exactPrice = await getExactPrice(targetShopId, pageCount, isColor, isDoubleSided, numCopies, colorPagesMap);
+      priceData = { price: exactPrice, priceMin: null, priceMax: null };
+    } else {
+      // Open PIN: Show price range
+      const range = await getPriceRange(pageCount, isColor, isDoubleSided, numCopies, colorPagesMap);
+      priceData = { price: null, priceMin: range.min, priceMax: range.max };
+    }
+
+    // For database storage, use exact price or average of range
+    const priceCfa = priceData.price || Math.ceil((priceData.priceMin + priceData.priceMax) / 2);
 
     // 5. Save to database
     const { data: job, error } = await supabase.from('jobs').insert([{
-      shop_id: shopId,
+      shop_id: targetShopId || shopId, // For Locked PIN: use target shop, else use initial shop
       user_email: user_email || null,
       raw_pin: pin,
       pin_hash: hash,
@@ -56,14 +80,18 @@ router.post('/', upload.single('file'), async (req, res) => {
       color: isColor,
       double_sided: isDoubleSided,
       copies: numCopies,
-      price_cfa: priceCfa
+      price_cfa: priceCfa,
+      pin_mode: pinMode  // 'open' or 'locked'
     }]).select().single();
 
     if (error) throw error;
 
     res.json({
       pin,
-      price: priceCfa,
+      priceMin: priceData.priceMin,
+      priceMax: priceData.priceMax,
+      price: priceData.price,
+      pinMode,
       job_id: job.id
     });
 

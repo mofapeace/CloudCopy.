@@ -1,9 +1,9 @@
-# ☁️ CloudCopy
+# ☁️ Cloudkopii
 
 > **Campus printing, unchained.**
 > Upload from your room. Pay at the counter. No flash drives. No queues. No malware.
 
-CloudCopy is a lightweight SaaS platform built to modernize document printing at African universities — starting with the **University of Buea, Cameroon**. It replaces the chaos of USB sticks, WhatsApp files, and long queues with a clean, cloud-based "Hold & Release" system that works even on 3G.
+Cloudkopii is a lightweight SaaS platform built to modernize document printing at African universities — starting with the **University of Buea, Cameroon**. It replaces the chaos of USB sticks, WhatsApp files, and long queues with a clean, cloud-based "Hold & Release" system that works even on 3G.
 
 ---
 
@@ -25,22 +25,47 @@ CloudCopy is a lightweight SaaS platform built to modernize document printing at
 
 ## ⚙️ How It Works
 
-CloudCopy uses a **"Hold & Release" PIN system** — no mobile money, no wallet setup, no friction.
+Cloudkopii uses a **"Hold & Release" PIN system** — no mobile money, no wallet setup, no friction. Two PIN modes depending on the student's plan.
+
+---
+
+### 🔓 Mode 1 — Open PIN (Free & Pro students)
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  1. UPLOAD        2. HANDSHAKE          3. RELEASE              │
-│                                                                  │
-│  Student uploads  →  Walks to shop,  →  Operator types PIN  →  │
-│  doc from room       pays cash,          document prints        │
-│  Gets 4-digit PIN    gives PIN           instantly              │
-└─────────────────────────────────────────────────────────────────┘
+Student uploads doc + enters name
+        ↓
+Sees price RANGE e.g. "150 – 300 CFA"
+        ↓
+Gets PIN → walks to ANY Cloudkopii shop
+        ↓
+Pays cash → operator enters PIN → confirms name → prints
 ```
 
 **Example:**
-1. Student uploads `internship_report.pdf`, enters their name **"Tabi"** → System calculates **150 CFA** → Generates PIN **`7823`**
-2. Student walks to any CloudCopy shop, pays 150 CFA cash, says "PIN 7823"
-3. Operator types `7823` → dashboard shows **"Tabi — 2 pages — B&W"** → operator asks "your name?" → student confirms → document prints
+1. Tabi uploads `internship_report.pdf` → sees **"150 – 300 CFA"** → gets PIN **`7823`**
+2. Walks to the nearest open shop, pays whatever that shop charges
+3. Operator types `7823` → dashboard shows **"Tabi — 2 pages — B&W"** → confirms name → prints
+
+---
+
+### 🔒 Mode 2 — Locked PIN (Pro students only)
+
+```
+Pro student uploads doc + selects a specific Pro shop
+        ↓
+Sees EXACT price for that shop
+        ↓
+Sets pickup time + leaves edit instructions (optional)
+        ↓
+Gets PIN → only that shop can access the document
+        ↓
+Walks in at scheduled time → pays → prints
+```
+
+**Example:**
+1. Tabi selects **"Molyko Print Hub"** → sees exact price **200 CFA** → schedules pickup at **2:30 PM** → gets PIN **`4491`**
+2. Walks in at 2:30 PM — job is already prepared
+3. Only Molyko Print Hub's dashboard can release PIN `4491` — no other shop can access it
 
 ---
 
@@ -49,12 +74,11 @@ CloudCopy uses a **"Hold & Release" PIN system** — no mobile money, no wallet 
 ### V1 — Core (Currently Building)
 
 #### Student Side
-- **QR Access** — No app download. Scan a QR code at the shop to open CloudCopy instantly
+- **QR Access** — No app download. Scan a QR code at the shop to open Cloudkopii instantly
 - **Print Customizer** — Choose color/B&W, single/double-sided, number of copies
 - **Live Print Preview** — See exactly how the document will look before uploading. Available to all users
-- **Live Price Calculator** — Instant CFA cost breakdown before uploading
-- **Shop-Agnostic PIN** — Student enters their name at upload, receives a PIN. PIN + name verification required at any CloudCopy shop to release the job
-- **Shop Discovery Map** — See all registered CloudCopy shops. Pick any, walk in, redeem PIN
+- **Open PIN** — Upload, enter name, receive a PIN and price range. Redeemable at any Cloudkopii shop
+- **Shop Discovery Map** — See all registered Cloudkopii shops with live online/offline status
 - **Congestion Indicator** — Live busyness badge per shop based on jobs processed per 5 mins
 
 | Jobs / 5 mins | Status |
@@ -65,9 +89,10 @@ CloudCopy uses a **"Hold & Release" PIN system** — no mobile money, no wallet 
 
 #### Operator / Shop Dashboard
 - **Autopilot Queue** — One clean list of all pending PIN jobs. No Downloads folder, no WhatsApp files
-- **One-Click Print** — Operator enters PIN → document goes straight to the printer
+- **One-Click Print** — Operator enters PIN → confirms student name → document goes straight to the printer
 - **Kill Switch** — Manually set shop to Offline when closed, out of ink, or not taking jobs. Greys out shop on the student map
 - **USB-Free Zone** — No flash drives = no shortcut viruses on shop PCs
+- **Per-Shop Pricing** — Each shop sets their own prices (B&W, color, single/double-sided) from their dashboard
 
 #### Platform
 - **Auto-Nuke** — Every document permanently deleted 5–10 minutes after printing. No exceptions
@@ -78,25 +103,29 @@ CloudCopy uses a **"Hold & Release" PIN system** — no mobile money, no wallet 
 
 ### V2 — Pro Tier & Business Layer *(more features to be defined)*
 
-#### Student Pro Plan
+#### Student Plans
 | Feature | Free | Pro |
 |---|---|---|
 | Upload & PIN | ✅ | ✅ |
 | Print customizer | ✅ | ✅ |
 | Live print preview | ✅ | ✅ |
 | Congestion map | ✅ | ✅ |
-| PIN redeemable at any shop | ✅ | ✅ |
+| Open PIN (any shop) | ✅ | ✅ |
+| Price range shown | ✅ | ✅ |
+| Locked PIN (specific Pro shop) | ❌ | ✅ |
+| Exact price shown | ❌ | ✅ |
 | Pickup time scheduling | ❌ | ✅ |
 | Edit instructions to shop | ❌ | ✅ |
-| Access to Pro shops | ❌ | ✅ |
 
 #### Shop Subscription Plans
 | Feature | Free Trial | Basic | Pro Bundle |
 |---|---|---|---|
 | Duration | 2 weeks | Monthly | Monthly |
 | Operator dashboard | ✅ | ✅ | ✅ |
-| PIN release & queue | ✅ | ✅ | ✅ |
+| Open PIN queue | ✅ | ✅ | ✅ |
 | Kill switch | ✅ | ✅ | ✅ |
+| Custom pricing | ✅ | ✅ | ✅ |
+| Receive Locked PINs | ❌ | ❌ | ✅ |
 | Visible to Pro students | ❌ | ❌ | ✅ |
 | Priority job queue | ❌ | ❌ | ✅ |
 | Scheduled pickup handling | ❌ | ❌ | ✅ |
@@ -123,7 +152,7 @@ CloudCopy uses a **"Hold & Release" PIN system** — no mobile money, no wallet 
 | **Auth** | Supabase Auth + JWT | Simple session management for shop owners |
 | **Print Agent** | Node.js script (shop PC) | Polls Supabase, fires jobs to the local printer via node-printer |
 | **Frontend Hosting** | Vercel | Free tier, auto-deploys on every `git push` |
-| **Backend Hosting** | Railway | Cheap, simple, runs your Express server |
+| **Backend Hosting** | Render | Simple deployment, free tier |
 
 > **Build Rule:** Keep it simple. If a feature needs a third-party service, question whether it's needed before the first beta shop is onboarded.
 
@@ -132,7 +161,7 @@ CloudCopy uses a **"Hold & Release" PIN system** — no mobile money, no wallet 
 ## 📁 Project Structure
 
 ```
-cloudcopy/
+cloudkopii/
 │
 ├── client/                          # React + Vite frontend
 │   ├── public/
@@ -140,15 +169,18 @@ cloudcopy/
 │   └── src/
 │       ├── pages/
 │       │   ├── StudentUpload.jsx     # Student upload interface (mobile-first)
+│       │   ├── PinDisplay.jsx        # Shows PIN + price range/exact after upload
+│       │   ├── ShopMap.jsx           # Shop discovery map with congestion badges
 │       │   ├── OperatorDashboard.jsx # Shop owner queue + PIN entry
 │       │   └── ShopLogin.jsx         # Operator login page
 │       ├── components/
 │       │   ├── PrintCustomizer.jsx   # Color, sides, copies + price calculator
-│       │   ├── PinDisplay.jsx        # Shows PIN to student after upload
+│       │   ├── PinModeSelector.jsx   # Toggle between Open PIN and Locked PIN
 │       │   ├── JobCard.jsx           # Single job in the operator queue
 │       │   └── OfflineToggle.jsx     # Kill switch for shop status
 │       ├── lib/
-│       │   └── supabase.js           # Supabase client instance
+│       │   ├── supabase.js           # Supabase client instance
+│       │   └── api.js                # Axios instance + auth interceptor
 │       ├── App.jsx
 │       └── main.jsx
 │
@@ -157,10 +189,10 @@ cloudcopy/
 │   │   ├── upload.js                # POST /api/upload — receive doc, generate PIN
 │   │   ├── pin.js                   # POST /api/pin/verify — operator releases job
 │   │   ├── queue.js                 # GET /api/queue/:shopId — pending jobs feed
-│   │   └── shop.js                  # Shop registration + offline toggle
+│   │   └── shop.js                  # Shop registration, pricing, offline toggle
 │   ├── services/
 │   │   ├── pinGenerator.js          # Generate & hash 4-digit PINs
-│   │   ├── pricing.js               # Calculate CFA cost from doc specs
+│   │   ├── pricing.js               # Fetch shop prices, calculate range or exact
 │   │   ├── storage.js               # Upload file to Supabase Storage
 │   │   └── cleanup.js               # Auto-nuke + midnight cron purge
 │   ├── middleware/
@@ -191,13 +223,13 @@ cloudcopy/
 - Node.js 18+
 - A Supabase account (free at [supabase.com](https://supabase.com))
 - A Vercel account (free at [vercel.com](https://vercel.com))
-- A Railway account (free tier at [railway.app](https://railway.app))
+- A Render account (free at [render.com](https://render.com))
 
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/cloudcopy.git
-cd cloudcopy
+git clone https://github.com/YOUR_USERNAME/cloudkopii.git
+cd cloudkopii
 ```
 
 ### 2. Set up the frontend
@@ -251,12 +283,6 @@ CLIENT_URL=http://localhost:5173
 # Auto-nuke settings
 FILE_DELETE_DELAY_MINUTES=10
 CRON_PURGE_TIME=00:00
-
-# Pricing (CFA per page)
-PRICE_BW_SINGLE=25
-PRICE_BW_DOUBLE=40
-PRICE_COLOR_SINGLE=75
-PRICE_COLOR_DOUBLE=120
 ```
 
 ---
@@ -267,23 +293,27 @@ PRICE_COLOR_DOUBLE=120
 
 | Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/api/upload` | Upload document, returns PIN + price |
-| `GET` | `/api/job/{pin}/status` | Check if job is pending/printed/expired |
+| `POST` | `/api/upload` | Upload document, returns PIN + price range or exact price |
+| `GET` | `/api/job/:pin/status` | Check if job is pending/printed/expired |
+| `GET` | `/api/shops` | Get all registered shops for the map |
+| `GET` | `/api/shops/congestion` | Get live congestion level per shop |
+| `GET` | `/api/shops/:id/pricing` | Get exact pricing for a specific Pro shop (Locked PIN) |
 
 ### Operator Endpoints
 
 | Method | Endpoint | Description |
 |---|---|---|
 | `POST` | `/api/pin/verify` | Enter PIN to release print job |
-| `GET` | `/api/queue/{shop_id}` | Get all pending jobs for this shop |
+| `GET` | `/api/queue/:shopId` | Get pending jobs — Open PINs for all, Locked PINs for Pro shops only |
 | `POST` | `/api/shop/status` | Toggle shop online/offline |
+| `PUT` | `/api/shop/pricing` | Update shop's per-page prices |
 
 ### Admin Endpoints
 
 | Method | Endpoint | Description |
 |---|---|---|
 | `GET` | `/api/admin/shops` | List all registered shops + subscription status |
-| `POST` | `/api/admin/shops/{id}/activate` | Activate or renew subscription |
+| `POST` | `/api/admin/shops/:id/activate` | Activate or renew subscription |
 | `GET` | `/api/admin/analytics` | Print volumes, revenue, active shops |
 
 Full API docs are in `docs/api.md`.
@@ -292,7 +322,7 @@ Full API docs are in `docs/api.md`.
 
 ## 🔒 Security & Privacy
 
-CloudCopy is built with a **privacy-first architecture**:
+Cloudkopii is built with a **privacy-first architecture**:
 
 - **PIN + Name Verification:** A PIN alone never releases a job. At upload, the student enters their name. At the counter, the operator types the PIN — the dashboard shows the name attached to that job. The operator verbally confirms with the student before printing. A random correct PIN guess is useless without the matching name.
 
@@ -301,11 +331,12 @@ Stranger guesses PIN 7823 → dashboard shows "Tabi — 2 pages — B&W"
 Operator: "your name?" → Stranger: "John" ❌ → job blocked
 ```
 
+- **Locked PIN Shop Restriction:** A Locked PIN is cryptographically tied to one shop. No other operator dashboard can see or release it.
 - **PIN is Single-Use:** Once redeemed and printed, the PIN is dead. Cannot be reused.
 - **PIN Expiry:** PINs expire after 2 hours. Abandoned jobs are cancelled automatically.
 - **Auto-Nuke:** Every document is permanently deleted from cloud storage **5–10 minutes after printing**. No exceptions.
 - **Midnight Cron Purge:** Abandoned uploads deleted automatically every night at midnight.
-- **No Persistent Storage of Content:** CloudCopy stores document *metadata* (page count, cost, PIN hash), never the document content long-term.
+- **No Persistent Storage of Content:** Cloudkopii stores document *metadata* (page count, cost, PIN hash), never the document content long-term.
 - **PIN Hashing:** PINs are stored as bcrypt hashes. Even if the DB is leaked, no raw PINs are exposed.
 - **Presigned URLs:** Documents are fetched from storage using short-lived presigned URLs (5-minute TTL) — never publicly accessible.
 - **USB Elimination:** No flash drives = no shortcut viruses on shop PCs. By design.
@@ -314,40 +345,42 @@ Operator: "your name?" → Stranger: "John" ❌ → job blocked
 
 ## 💼 Monetization
 
-CloudCopy **never touches the physical cash** — shops keep 100% of their daily print revenue. CloudCopy collects a clean, predictable subscription fee.
+Cloudkopii **never touches the physical cash** — shops keep 100% of their daily print revenue. Cloudkopii collects a clean, predictable subscription fee.
 
 ### Shop Plans
 | Plan | Price | Notes |
 |---|---|---|
 | **Free Trial** | 0 CFA | First 2 weeks, full access |
-| **Basic** | 5,000 CFA/month | Core dashboard, queue, kill switch |
-| **Pro Bundle** | TBD | Everything in Basic + Pro student visibility, priority queue, scheduled pickups |
+| **Basic** | 5,000 CFA/month | Core dashboard, Open PIN queue, kill switch, custom pricing |
+| **Pro Bundle** | TBD | Everything in Basic + Locked PIN handling, scheduled pickups, Pro visibility |
 
 ### Student Plans
 | Plan | Price | Notes |
 |---|---|---|
-| **Free** | 0 CFA | Full core experience — upload, preview, PIN, any shop |
-| **Pro** | TBD | Pickup scheduling, edit instructions, Pro shop access |
+| **Free** | 0 CFA | Upload, preview, Open PIN, any shop, price range |
+| **Pro** | TBD | Locked PIN, exact pricing, pickup scheduling, edit instructions, Pro shops |
 
 ---
 
 ## 🗺 Roadmap
 
 ### V1 — Core (In Progress)
-- [ ] Document upload + shop-agnostic PIN generation
+- [ ] Document upload + Open PIN generation
+- [ ] Student name entry + PIN/name verification at counter
 - [ ] Live print preview (all users)
-- [ ] Print customizer + live price calculator
+- [ ] Print customizer + price range calculator
 - [ ] QR code shop access
 - [ ] Shop discovery map with live congestion indicators
+- [ ] Per-shop pricing set by operators
 - [ ] Operator dashboard + PIN release + one-click print
 - [ ] Kill switch (toggles shop offline on the map)
 - [ ] Auto-nuke + midnight cron purge
 - [ ] Low-bandwidth file compression
 
 ### V2 — Pro Tier & Business Layer *(more to be defined)*
-- [ ] Student Pro plan — pickup scheduling + edit instructions
+- [ ] Student Pro plan — Locked PIN, exact pricing, pickup scheduling, edit instructions
+- [ ] Shop Pro Bundle — receive Locked PINs, priority queue, scheduled pickup handling
 - [ ] Shop Basic plan (5,000 CFA/month)
-- [ ] Shop Pro Bundle — priority queue, scheduled pickups, edit handling
 - [ ] 2-week free trial logic for shops
 - [ ] Admin dashboard — shops, subscriptions, analytics
 - [ ] Print history logs for operators
@@ -380,4 +413,4 @@ MIT License — see `LICENSE` for details.
 ---
 
 > **Built for Buea. Scaling to every campus in Africa.**
-> *CloudCopy — Stop the queue. Start the cloud.*
+> *Cloudkopii — Stop the queue. Start the cloud.*

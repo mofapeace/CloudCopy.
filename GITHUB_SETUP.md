@@ -92,7 +92,7 @@ If you don't have a GitHub account yet:
 1. **Create GitHub Account:** https://github.com/signup
 2. **Create Personal Access Token:**
    - Go to https://github.com/settings/tokens/new
-   - Token name: "CloudCopy"
+   - Token name: "Cloudkopii"
    - Expiration: 90 days (or longer)
    - Scopes: Check ✓ `repo`, ✓ `write:repo_hook`
    - Click "Generate token"
@@ -125,7 +125,7 @@ If you prefer SSH (more secure):
 
 3. **Use SSH Remote:**
    ```bash
-   git remote add origin git@github.com:YOUR_USERNAME/CloudCopy.git
+   git remote add origin git@github.com:YOUR_USERNAME/Cloudkopii.git
    git push -u origin main
    ```
 
@@ -295,7 +295,7 @@ Once you push to GitHub, you'll have:
 git remote -v
 
 # Change remote (if you made a mistake)
-git remote set-url origin https://github.com/YOUR_USERNAME/CloudCopy.git
+git remote set-url origin https://github.com/YOUR_USERNAME/Cloudkopii.git
 
 # Create a new branch
 git checkout -b feature/your-feature
@@ -316,4 +316,4 @@ git pull origin main
 
 ---
 
-**Ready to share your CloudCopy project with the world! 🚀**
+**Ready to share your Cloudkopii project with the world! 🚀**

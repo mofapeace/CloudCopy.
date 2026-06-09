@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Starting CloudCopy Services..."
+echo "Starting Cloudkopii Services..."
 
 # 1. Start Server
 echo "Starting Backend Server on port 3000..."

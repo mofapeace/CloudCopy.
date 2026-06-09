@@ -10,6 +10,8 @@ export default function ShopLogin() {
   const [password, setPassword] = useState('');
   const [shopName, setShopName] = useState('');
   const [location, setLocation] = useState('');
+  const [bwPrice, setBwPrice] = useState('15');
+  const [colorPrice, setColorPrice] = useState('25');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [checkEmail, setCheckEmail] = useState(false);
@@ -25,16 +27,44 @@ export default function ShopLogin() {
           email,
           password,
           options: { 
-            data: { shopName, location, role: 'operator' },
+            data: { 
+              shopName, 
+              location, 
+              bwPrice: parseInt(bwPrice, 10),
+              colorPrice: parseInt(colorPrice, 10),
+              role: 'operator' 
+            },
             emailRedirectTo: window.location.origin
           }
         });
         if (signUpError) throw signUpError;
 
+        // Create shop with pricing on backend
+        try {
+          const shopRes = await fetch('/api/shop/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email,
+              shopName,
+              location,
+              bwPrice: parseInt(bwPrice, 10),
+              colorPrice: parseInt(colorPrice, 10)
+            })
+          });
+          const shopData = await shopRes.json();
+          if (!shopRes.ok) throw new Error(shopData.error || 'Failed to register shop');
+        } catch (shopErr) {
+          console.error('Shop registration error:', shopErr);
+          // Continue anyway, user can manually register shop later
+        }
+
         // Store operator session
-        localStorage.setItem('cloudcopy_operator', JSON.stringify({
+        localStorage.setItem('cloudkopii_operator', JSON.stringify({
           email,
           shopName,
+          bwPrice: parseInt(bwPrice, 10),
+          colorPrice: parseInt(colorPrice, 10),
           trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
         }));
         setCheckEmail(true);
@@ -43,9 +73,9 @@ export default function ShopLogin() {
         if (signInError) throw signInError;
 
         // Check trial from stored data or mock
-        const stored = localStorage.getItem('cloudcopy_operator');
+        const stored = localStorage.getItem('cloudkopii_operator');
         if (!stored) {
-          localStorage.setItem('cloudcopy_operator', JSON.stringify({
+          localStorage.setItem('cloudkopii_operator', JSON.stringify({
             email,
             trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
           }));
@@ -173,6 +203,44 @@ export default function ShopLogin() {
                   style={{ paddingLeft: '2.75rem' }}
                 />
                 <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', fontSize: '1.1rem' }}>📍</span>
+              </div>
+              
+              {/* Pricing Section */}
+              <div style={{ background: 'rgba(0,122,255,0.05)', border: '1px solid rgba(0,122,255,0.2)', padding: '1rem', borderRadius: 'var(--radius-md)' }}>
+                <div style={{ fontSize: '0.9rem', fontWeight: 600, marginBottom: '0.75rem', color: 'var(--text-primary)' }}>💰 Set Your Prices (per page)</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="number"
+                      className="input-field"
+                      placeholder="B&W price"
+                      value={bwPrice}
+                      onChange={e => setBwPrice(e.target.value)}
+                      required
+                      min="5"
+                      max="100"
+                      style={{ paddingRight: '2.5rem' }}
+                    />
+                    <span style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', fontWeight: 600 }}>CFA</span>
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="number"
+                      className="input-field"
+                      placeholder="Color price"
+                      value={colorPrice}
+                      onChange={e => setColorPrice(e.target.value)}
+                      required
+                      min="5"
+                      max="100"
+                      style={{ paddingRight: '2.5rem' }}
+                    />
+                    <span style={{ position: 'absolute', right: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)', fontWeight: 600 }}>CFA</span>
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+                  💡 These prices will be shown in the price range for free students.
+                </div>
               </div>
             </>
           )}

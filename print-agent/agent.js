@@ -44,7 +44,7 @@ async function pollQueue() {
   }
 }
 
-console.log('🖨️ CloudCopy Print Agent Started');
+console.log('🖨️ Cloudkopii Print Agent Started');
 console.log(`Connecting to: ${config.serverUrl}`);
 console.log(`Shop ID: ${config.shopId}`);
 console.log('Polling for jobs...');

@@ -1,8 +1,8 @@
-# CloudCopy Authentication System
+# Cloudkopii Authentication System
 
-## 🔐 Overview
+## Overview
 
-CloudCopy implements a **role-based authentication system** with two distinct user types:
+Cloudkopii implements a **role-based authentication system** with two distinct user types:
 
 - **Clients** (formerly "Students") — Upload documents, pay at counter
 - **Operators** — Manage print shop queue
@@ -411,7 +411,7 @@ VITE_API_URL=https://your-backend-domain.com
 ```env
 APP_ENV=production
 SECRET_KEY=generate_a_random_secret_key_here
-DATABASE_URL=postgresql://user:pass@db-host:5432/cloudcopy
+DATABASE_URL=postgresql://user:pass@db-host:5432/cloudkopii
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=10080
 ```

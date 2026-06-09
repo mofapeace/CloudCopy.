@@ -52,7 +52,7 @@ export default function StudentLogin() {
     if (m === 'signup') setMode('signup');
   }, [location.search]);
 
-  const remainingUses = 5 - parseInt(localStorage.getItem('cloudcopy_free_uses') || '0', 10);
+  const remainingUses = 5 - parseInt(localStorage.getItem('cloudkopii_free_uses') || '0', 10);
   const isLocked = remainingUses <= 0;
 
   return (
@@ -60,7 +60,7 @@ export default function StudentLogin() {
       {/* Pro Plan Banner */}
       <div className="glass-card animate-fade-in" style={{ textAlign: 'center', marginBottom: '1.5rem', background: 'linear-gradient(135deg, rgba(0, 122, 255, 0.08), rgba(255, 149, 0, 0.08))' }}>
         <Cloud size={40} color="var(--accent-primary)" style={{ marginBottom: '0.75rem' }} />
-        <h2 style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>CloudCopy Pro</h2>
+        <h2 style={{ fontSize: '1.75rem', marginBottom: '0.5rem' }}>Cloudkopii Pro</h2>
         {isLocked ? (
           <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>
             You've used your 5 free prints. Create an account to continue.

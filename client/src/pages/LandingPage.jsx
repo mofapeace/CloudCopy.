@@ -99,7 +99,7 @@ export default function LandingPage() {
             <h3>Get Your PIN</h3>
             <p>
               Receive a secure 4-digit PIN linked to your name — your ticket to
-              print at any CloudCopy shop.
+              print at any Cloudkopii shop.
             </p>
           </div>
 
@@ -120,7 +120,7 @@ export default function LandingPage() {
       <section className="landing-section features-section">
         <div style={{ maxWidth: 960, margin: '0 auto', width: '100%' }}>
           <span className="section-label">Built for Campus</span>
-          <h2 className="section-title">Why Students Love CloudCopy</h2>
+          <h2 className="section-title">Why Students Love Cloudkopii</h2>
           <p className="section-subtitle">
             Designed for African universities — fast, secure, and built to work
             on any device.
@@ -187,7 +187,7 @@ export default function LandingPage() {
               </div>
               <h3>No USB, No App</h3>
               <p>
-                Open CloudCopy in your browser — works on any phone or laptop.
+                Open Cloudkopii in your browser — works on any phone or laptop.
               </p>
             </div>
           </div>
@@ -200,7 +200,7 @@ export default function LandingPage() {
         <h2 className="section-title">Ready to Print?</h2>
         <p className="section-subtitle" style={{ margin: '0 auto 2.5rem' }}>
           Whether you're a student needing prints or a shop owner looking to
-          modernize — CloudCopy has you covered.
+          modernize — Cloudkopii has you covered.
         </p>
 
         <div className="role-cards">
@@ -238,9 +238,9 @@ export default function LandingPage() {
       <footer className="landing-footer">
         <div className="footer-links">
           <Link to="/map">Shop Map</Link>
-          <a href="mailto:support@cloudcopy.cm">Contact</a>
+          <a href="mailto:support@cloudkopii.cm">Contact</a>
         </div>
-        <p>&copy; {new Date().getFullYear()} CloudCopy — Built for Buea. Scaling to every campus in Africa.</p>
+        <p>&copy; {new Date().getFullYear()} Cloudkopii — Built for Buea. Scaling to every campus in Africa.</p>
       </footer>
     </div>
   );

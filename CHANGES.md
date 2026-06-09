@@ -63,7 +63,7 @@ npm run dev
 What I tested
 
 - Fixed the JSX syntax error that prevented Vite from starting the dev server.
-- Verified backend was previously configured to use SQLite by default (`backend/.env` contained `DATABASE_URL=sqlite:///./cloudcopy.db`).
+- Verified backend was previously configured to use SQLite by default (`backend/.env` contained `DATABASE_URL=sqlite:///./cloudkopii.db`).
 
 Next recommended steps
 
