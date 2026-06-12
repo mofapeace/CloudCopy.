@@ -16,7 +16,7 @@ export default function OperatorDashboard() {
   const [queue, setQueue] = useState([]);
 
   useEffect(() => {
-    const stored = localStorage.getItem('cloudcopy_operator');
+    const stored = localStorage.getItem('cloudkopii_operator');
     if (stored) {
       const info = JSON.parse(stored);
       setOperatorInfo(info);
@@ -69,7 +69,7 @@ export default function OperatorDashboard() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('cloudcopy_operator');
+    localStorage.removeItem('cloudkopii_operator');
     navigate('/operator/login');
   };
 

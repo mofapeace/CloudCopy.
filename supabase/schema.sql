@@ -6,10 +6,11 @@ CREATE TABLE IF NOT EXISTS shops (
     is_online BOOLEAN DEFAULT false,
     subscription_tier TEXT DEFAULT 'free',
     trial_ends_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() + INTERVAL '1 month',
-    -- Pricing (in CFA per page)
-    bw_price_per_page INTEGER DEFAULT 15,
-    color_price_per_page INTEGER DEFAULT 25,
-    double_sided_discount INTEGER DEFAULT 0,
+    -- Pricing (in CFA per page/sheet)
+    bw_price_per_page INTEGER DEFAULT 25,
+    color_price_per_page INTEGER DEFAULT 75,
+    bw_double_sided_price INTEGER DEFAULT 40,
+    color_double_sided_price INTEGER DEFAULT 120,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

@@ -16,6 +16,8 @@ export default function StudentDashboard() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session?.user) {
         navigate('/login');
+      } else if (session.user.user_metadata?.role === 'operator') {
+        navigate('/operator');
       } else {
         setUser(session.user);
         fetchJobs(session.user.email);

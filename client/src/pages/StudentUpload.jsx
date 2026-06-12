@@ -58,8 +58,13 @@ export default function StudentUpload() {
     // Check Supabase session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
+        if (session.user.user_metadata?.role === 'operator') {
+          navigate('/operator');
+          return;
+        }
         setUser(session.user);
-        if (session.user.user_metadata?.isPro) setReserveAtShop(true);
+        const userIsPro = session.user.user_metadata?.isPro === true || session.user.user_metadata?.isPro === 'true';
+        if (userIsPro) setReserveAtShop(true);
         if (session.user.user_metadata?.name) {
           setStudentName(session.user.user_metadata.name);
         }
@@ -68,8 +73,13 @@ export default function StudentUpload() {
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
+        if (session.user.user_metadata?.role === 'operator') {
+          navigate('/operator');
+          return;
+        }
         setUser(session.user);
-        if (session.user.user_metadata?.isPro) setReserveAtShop(true);
+        const userIsPro = session.user.user_metadata?.isPro === true || session.user.user_metadata?.isPro === 'true';
+        if (userIsPro) setReserveAtShop(true);
         if (session.user.user_metadata?.name && !studentName) {
           setStudentName(session.user.user_metadata.name);
         }
@@ -85,6 +95,11 @@ export default function StudentUpload() {
     api.get('/shop').then((res) => {
       setShops(res.data);
       if (res.data.length > 0) {
+        // Find min and max prices across all shops for the UI
+        const minBw = Math.min(...res.data.map(s => s.bw_price_per_page || 15));
+        const maxBw = Math.max(...res.data.map(s => s.bw_price_per_page || 25));
+        setOptions(prev => ({ ...prev, minBw, maxBw }));
+        
         setShopId(res.data[0].id);
         if (!targetShopId) setTargetShopId(res.data[0].id);
       }
@@ -177,22 +192,24 @@ export default function StudentUpload() {
     handleFile(e.dataTransfer.files[0]);
   };
 
+  const isPro = user?.user_metadata?.isPro === true || user?.user_metadata?.isPro === 'true';
+
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (!file || !studentName || !shopId) return;
+    if (!file || !studentName) return;
 
     setIsUploading(true);
     const formData = new FormData();
     formData.append('file', file);
     formData.append('studentName', studentName);
-    formData.append('shopId', shopId);
+    formData.append('shopId', isPro ? shopId : '');
     formData.append('color', options.color);
     formData.append('doubleSided', options.doubleSided);
     formData.append('copies', options.copies);
     formData.append('colorPagesMap', JSON.stringify(colorPagesMap));
     // Pro reservation fields
-    formData.append('isPro', reserveAtShop ? 'true' : 'false');
-    formData.append('targetShopId', reserveAtShop ? targetShopId : '');
+    formData.append('isPro', isPro && reserveAtShop ? 'true' : 'false');
+    formData.append('targetShopId', isPro && reserveAtShop ? targetShopId : '');
 
     try {
       const res = await api.post('/upload', formData, {
@@ -343,38 +360,42 @@ export default function StudentUpload() {
         </div>
 
         <form onSubmit={handleUpload}>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Select Print Shop</label>
-            <select 
-              className="input-field" 
-              value={shopId} 
-              onChange={e => setShopId(e.target.value)}
-              required
-            >
-              <option value="" disabled>Choose a location</option>
-              {shops.map(s => (
-                <option key={s.id} value={s.id}>{s.name} - {s.location}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Reserve at specific shop (Pro users) */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem' }}>
-              <input type="checkbox" checked={reserveAtShop} onChange={e => setReserveAtShop(e.target.checked)} />
-              <span>Reserve at specific shop (Pro users)</span>
-            </label>
-
-            {reserveAtShop && (
-              <div style={{ marginTop: '0.5rem' }}>
-                <select value={targetShopId} onChange={e => setTargetShopId(e.target.value)} className="input-field" style={{ width: '100%' }}>
+          {isPro && (
+            <>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Select Print Shop</label>
+                <select 
+                  className="input-field" 
+                  value={shopId} 
+                  onChange={e => setShopId(e.target.value)}
+                  required={isPro}
+                >
+                  <option value="" disabled>Choose a location</option>
                   {shops.map(s => (
                     <option key={s.id} value={s.id}>{s.name} - {s.location}</option>
                   ))}
                 </select>
               </div>
-            )}
-          </div>
+
+              {/* Reserve at specific shop (Pro users) */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem' }}>
+                  <input type="checkbox" checked={reserveAtShop} onChange={e => setReserveAtShop(e.target.checked)} />
+                  <span>Reserve at specific shop (Pro users)</span>
+                </label>
+
+                {reserveAtShop && (
+                  <div style={{ marginTop: '0.5rem' }}>
+                    <select value={targetShopId} onChange={e => setTargetShopId(e.target.value)} className="input-field" style={{ width: '100%' }}>
+                      {shops.map(s => (
+                        <option key={s.id} value={s.id}>{s.name} - {s.location}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Your Name</label>
@@ -491,7 +512,7 @@ export default function StudentUpload() {
 
           {file && !isParsing && (
             <div className="animate-fade-in">
-              <PrintCustomizer options={options} setOptions={setOptions} pageCount={pageCount} colorPagesMap={colorPagesMap} />
+              <PrintCustomizer options={options} setOptions={setOptions} pageCount={pageCount} colorPagesMap={colorPagesMap} isPro={isPro} />
             </div>
           )}
 
@@ -500,7 +521,7 @@ export default function StudentUpload() {
               type="submit" 
               className="btn btn-primary" 
               style={{ width: '100%', padding: '1rem' }}
-              disabled={!file || !studentName || !shopId || isUploading || isParsing}
+              disabled={!file || !studentName || isUploading || isParsing || (isPro && !shopId)}
             >
               {isUploading ? 'Uploading...' : 'Get Print PIN'}
             </button>

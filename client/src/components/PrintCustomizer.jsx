@@ -1,7 +1,7 @@
 import React from 'react';
 import { Palette, Copy, CheckSquare } from 'lucide-react';
 
-export default function PrintCustomizer({ options, setOptions, pageCount, colorPagesMap }) {
+export default function PrintCustomizer({ options, setOptions, pageCount, colorPagesMap, isPro }) {
   const { color, doubleSided, copies } = options;
 
   const toggleColor = () => setOptions({ ...options, color: !color });
@@ -46,6 +46,15 @@ export default function PrintCustomizer({ options, setOptions, pageCount, colorP
   }
 
   const finalTotal = totalCost * copies;
+
+  // Calculate range for non-pro users
+  const { minBw = 15, maxBw = 25 } = options;
+  // Let's assume color min/max and double sided min/max are scaled similarly for the preview
+  // For simplicity, we calculate the ratio
+  const minRatio = minBw / 25; // 25 is the default bwPrice we used to calculate totalCost
+  const maxRatio = maxBw / 25;
+  const minTotal = Math.floor(finalTotal * minRatio);
+  const maxTotal = Math.ceil(finalTotal * maxRatio);
   
   // Count how many color pages exist in the document (informational)
   const colorPageCount = colorPagesMap.filter(c => c).length;
@@ -119,8 +128,15 @@ export default function PrintCustomizer({ options, setOptions, pageCount, colorP
           <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{sheetsCount} sheet{sheetsCount !== 1 ? 's' : ''} × {copies} cop{copies !== 1 ? 'ies' : 'y'}</div>
           <div style={{ fontSize: '0.85rem' }}>{doubleSided ? 'Double-sided' : 'Single-sided'}</div>
         </div>
-        <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--accent-primary)' }}>
-          {finalTotal} CFA
+        <div style={{ fontSize: '1.75rem', fontWeight: 700, color: 'var(--accent-primary)', textAlign: 'right' }}>
+          {isPro ? (
+            <>{finalTotal} CFA</>
+          ) : (
+            <>
+              <div style={{ fontSize: '1.25rem' }}>{minTotal} - {maxTotal} CFA</div>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', fontWeight: 'normal' }}>(Est. range)</div>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Store, Mail, Lock, ArrowRight, Gift, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import api from '../lib/api';
 
 export default function ShopLogin() {
   const navigate = useNavigate();
@@ -15,6 +16,22 @@ export default function ShopLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [checkEmail, setCheckEmail] = useState(false);
+
+  React.useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.user_metadata?.role === 'operator') {
+        navigate('/operator');
+      }
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user?.user_metadata?.role === 'operator') {
+        navigate('/operator');
+      }
+    });
+
+    return () => authListener.subscription.unsubscribe();
+  }, [navigate]);
 
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -41,19 +58,13 @@ export default function ShopLogin() {
 
         // Create shop with pricing on backend
         try {
-          const shopRes = await fetch('/api/shop/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              email,
-              shopName,
-              location,
-              bwPrice: parseInt(bwPrice, 10),
-              colorPrice: parseInt(colorPrice, 10)
-            })
+          await api.post('/shop/register', {
+            email,
+            shopName,
+            location,
+            bwPrice: parseInt(bwPrice, 10),
+            colorPrice: parseInt(colorPrice, 10)
           });
-          const shopData = await shopRes.json();
-          if (!shopRes.ok) throw new Error(shopData.error || 'Failed to register shop');
         } catch (shopErr) {
           console.error('Shop registration error:', shopErr);
           // Continue anyway, user can manually register shop later
@@ -213,7 +224,7 @@ export default function ShopLogin() {
                     <input
                       type="number"
                       className="input-field"
-                      placeholder="B&W price"
+                      placeholder="Price for 1 page in B&W"
                       value={bwPrice}
                       onChange={e => setBwPrice(e.target.value)}
                       required
@@ -227,7 +238,7 @@ export default function ShopLogin() {
                     <input
                       type="number"
                       className="input-field"
-                      placeholder="Color price"
+                      placeholder="Price for 1 page in Color"
                       value={colorPrice}
                       onChange={e => setColorPrice(e.target.value)}
                       required

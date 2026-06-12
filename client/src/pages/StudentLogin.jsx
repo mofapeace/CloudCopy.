@@ -2,10 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Cloud, Mail, Lock, ArrowRight } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import api from '../lib/api';
 
 export default function StudentLogin() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.user_metadata?.role === 'operator') {
+        navigate('/operator');
+      } else if (session?.user) {
+        navigate('/student');
+      }
+    });
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user?.user_metadata?.role === 'operator') {
+        navigate('/operator');
+      } else if (session?.user) {
+        navigate('/student');
+      }
+    });
+
+    return () => authListener.subscription.unsubscribe();
+  }, [navigate]);
+
   const [mode, setMode] = useState('login'); // 'login' or 'signup'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,7 +43,7 @@ export default function StudentLogin() {
 
     try {
       if (mode === 'signup') {
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
           options: { 
@@ -30,6 +52,20 @@ export default function StudentLogin() {
           }
         });
         if (signUpError) throw signUpError;
+        
+        // Register student in backend database
+        if (data.user) {
+          try {
+            await api.post('/auth/student-register', {
+              id: data.user.id,
+              email: data.user.email,
+              name: name
+            });
+          } catch (backendErr) {
+            console.error('Backend student registration error:', backendErr);
+            // Continue anyway so they aren't blocked if they exist or network glitches
+          }
+        }
         // Reset free uses on successful signup (optional here, might be better after confirmation, but we'll keep it)
         localStorage.setItem('cloudcopy_free_uses', '0');
         setCheckEmail(true);
