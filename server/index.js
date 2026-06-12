@@ -9,6 +9,7 @@ const queueRoute = require('./routes/queue');
 const shopRoute = require('./routes/shop');
 const jobsRoute = require('./routes/jobs');
 const jobRoute = require('./routes/job');
+const authRoute = require('./routes/auth');
 
 // Initialize cleanup service cron jobs
 require('./services/cleanup');
@@ -26,6 +27,7 @@ app.use('/api/queue', queueRoute);
 app.use('/api/shop', shopRoute);
 app.use('/api/jobs', jobsRoute);
 app.use('/api/job', jobRoute);
+app.use('/api/auth', authRoute);
 
 app.get('/', (req, res) => {
   res.json({

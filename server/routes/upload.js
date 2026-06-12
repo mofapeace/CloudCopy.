@@ -23,7 +23,7 @@ router.post('/', upload.single('file'), async (req, res) => {
       isPro
     } = req.body;
 
-    if (!file || !studentName || !shopId) {
+    if (!file || !studentName) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
@@ -70,7 +70,7 @@ router.post('/', upload.single('file'), async (req, res) => {
 
     // 5. Save to database
     const { data: job, error } = await supabase.from('jobs').insert([{
-      shop_id: targetShopId || shopId, // For Locked PIN: use target shop, else use initial shop
+      shop_id: targetShopId || shopId || null, // Allow null if no shop selected
       user_email: user_email || null,
       raw_pin: pin,
       pin_hash: hash,
