@@ -21,24 +21,23 @@ router.post('/register', async (req, res) => {
       return res.status(404).json({ error: 'User not found. Please sign up first.' });
     }
 
-    // Check if shop already exists for this user
-    const { data: existingShop } = await supabase
-      .from('shops')
-      .select('id')
-      .eq('operator_id', user.id)
+    // Check if shop already exists for this user by checking operators table
+    const { data: existingOperator } = await supabase
+      .from('operators')
+      .select('shop_id')
+      .eq('email', user.email)
       .single();
 
-    if (existingShop) {
+    if (existingOperator) {
       return res.status(400).json({ error: 'Shop already registered for this operator' });
     }
 
     // Create shop record
-    const { data: shop, error } = await supabase
+    const { data: shop, error: shopError } = await supabase
       .from('shops')
       .insert({
         name: shopName,
         location: location,
-        operator_id: user.id,
         bw_price_per_page: parseInt(bwPrice, 10),
         color_price_per_page: parseInt(colorPrice, 10),
         is_online: true
@@ -46,7 +45,24 @@ router.post('/register', async (req, res) => {
       .select()
       .single();
 
-    if (error) throw error;
+    if (shopError) {
+      console.error('Supabase shop insert error:', shopError);
+      throw shopError;
+    }
+
+    // Create operator record linking to shop
+    const { error: operatorError } = await supabase
+      .from('operators')
+      .insert({
+        id: user.id, // Use auth user.id as operator id
+        shop_id: shop.id,
+        email: email
+      });
+
+    if (operatorError) {
+      console.error('Supabase operator insert error:', operatorError);
+      throw operatorError;
+    }
 
     res.json({ 
       success: true, 
