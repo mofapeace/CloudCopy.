@@ -9,23 +9,25 @@ export default function StudentLogin() {
   const location = useLocation();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user?.user_metadata?.role === 'operator') {
-        navigate('/operator');
-      } else if (session?.user) {
-        navigate('/student');
+    // On mount, check if already logged in and route based on DB role
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        try {
+          const roleRes = await api.post('/auth/check-role', {
+            userId: session.user.id,
+            email: session.user.email
+          });
+          if (roleRes.data.role === 'operator') {
+            navigate('/operator');
+          } else {
+            navigate('/student');
+          }
+        } catch (err) {
+          // If role check fails, still navigate to student as fallback
+          navigate('/student');
+        }
       }
     });
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user?.user_metadata?.role === 'operator') {
-        navigate('/operator');
-      } else if (session?.user) {
-        navigate('/student');
-      }
-    });
-
-    return () => authListener.subscription.unsubscribe();
   }, [navigate]);
 
   const [mode, setMode] = useState('login'); // 'login' or 'signup'
@@ -47,8 +49,8 @@ export default function StudentLogin() {
           email,
           password,
           options: { 
-            data: { name },
-            emailRedirectTo: window.location.origin
+            data: { name, role: 'student' },
+            emailRedirectTo: window.location.origin + '/login'
           }
         });
         if (signUpError) throw signUpError;
@@ -63,15 +65,34 @@ export default function StudentLogin() {
             });
           } catch (backendErr) {
             console.error('Backend student registration error:', backendErr);
-            // Continue anyway so they aren't blocked if they exist or network glitches
+            // Don't block — they can still use the app
           }
         }
-        // Reset free uses on successful signup (optional here, might be better after confirmation, but we'll keep it)
         localStorage.setItem('cloudcopy_free_uses', '0');
         setCheckEmail(true);
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        // Login flow
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
+
+        // Check role from backend database (source of truth)
+        try {
+          const roleRes = await api.post('/auth/check-role', {
+            userId: data.user.id,
+            email: data.user.email
+          });
+
+          if (roleRes.data.role === 'operator') {
+            // This person is an operator, redirect them
+            setError('This account is registered as a shop operator. Please use the Shop Portal login.');
+            await supabase.auth.signOut();
+            return;
+          }
+        } catch (roleErr) {
+          console.error('Role check failed:', roleErr);
+          // Continue as student if role check fails
+        }
+
         localStorage.setItem('cloudcopy_free_uses', '0');
         navigate('/student');
       }

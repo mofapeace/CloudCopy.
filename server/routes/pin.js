@@ -12,18 +12,23 @@ router.post('/verify', async (req, res) => {
       return res.status(400).json({ error: 'Missing pin or shopId' });
     }
 
-    // Fetch jobs based on pin_mode
+    // Fetch pending jobs that could match:
+    // 1. Jobs locked to this specific shop
+    // 2. Jobs with open PIN mode (shop_id is null — any shop can claim)
     const { data: jobs, error } = await supabase
       .from('jobs')
       .select('*')
       .eq('status', 'pending')
-      .or(`and(shop_id.eq.${shopId},pin_mode.eq.open),and(shop_id.eq.${shopId},pin_mode.eq.locked)`);
+      .or(`shop_id.eq.${shopId},shop_id.is.null`);
 
-    if (error) throw error;
+    if (error) {
+      console.error('PIN verify query error:', error);
+      throw error;
+    }
 
     // Find matching PIN
     let matchedJob = null;
-    for (const job of jobs) {
+    for (const job of (jobs || [])) {
       const isMatch = await bcrypt.compare(pin.toString(), job.pin_hash);
       if (isMatch) {
         matchedJob = job;
@@ -39,14 +44,22 @@ router.post('/verify', async (req, res) => {
     const twoFACode = generateCode();
     const twoFAHash = hashCode(twoFACode);
 
-    // Store 2FA code in job
+    // Store 2FA code in job and claim the job for this shop
+    const updateData = { 
+      two_fa_code: twoFAHash, 
+      two_fa_verified: false 
+    };
+    
+    // If the job was open (no shop), claim it for this shop now
+    if (!matchedJob.shop_id) {
+      updateData.shop_id = shopId;
+    }
+
     await supabase
       .from('jobs')
-      .update({ two_fa_code: twoFAHash, two_fa_verified: false })
+      .update(updateData)
       .eq('id', matchedJob.id);
 
-    // TODO: Send 2FA code to student (email, SMS, push notification, or in-app)
-    // For now, log it (in production, implement proper channel)
     console.log(`🔐 2FA Code for job ${matchedJob.id}: ${twoFACode}`);
 
     res.json({
@@ -55,10 +68,11 @@ router.post('/verify', async (req, res) => {
       pageCount: matchedJob.page_count,
       color: matchedJob.color,
       copies: matchedJob.copies,
+      doubleSided: matchedJob.double_sided,
       price: matchedJob.price_cfa,
       createdAt: matchedJob.created_at,
-      twoFARequired: true,  // Signal that 2FA is needed
-      twoFACode: twoFACode,  // Send code directly in app
+      twoFARequired: true,
+      twoFACode: twoFACode,  // Send code directly in app for now
       message: 'Student must confirm 2FA on their phone to release this job.'
     });
 
@@ -96,10 +110,14 @@ router.post('/confirm-2fa', async (req, res) => {
       return res.status(401).json({ error: 'Invalid 2FA code' });
     }
 
-    // Mark 2FA as verified
+    // Mark 2FA as verified and student as confirmed
     await supabase
       .from('jobs')
-      .update({ two_fa_verified: true, two_fa_verified_at: new Date().toISOString() })
+      .update({ 
+        two_fa_verified: true, 
+        two_fa_verified_at: new Date().toISOString(),
+        student_confirmed: true
+      })
       .eq('id', jobId);
 
     res.json({ 

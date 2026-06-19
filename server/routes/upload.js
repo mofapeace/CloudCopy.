@@ -24,20 +24,32 @@ router.post('/', upload.single('file'), async (req, res) => {
     } = req.body;
 
     if (!file || !studentName) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ error: 'Missing required fields: file and studentName are required' });
     }
 
     // 1. Calculate pages
     let pageCount = 1;
     if (file.mimetype === 'application/pdf') {
-      const pdfDoc = await PDFDocument.load(file.buffer);
-      pageCount = pdfDoc.getPageCount();
+      try {
+        const pdfDoc = await PDFDocument.load(file.buffer);
+        pageCount = pdfDoc.getPageCount();
+      } catch (pdfErr) {
+        console.error('PDF parsing error:', pdfErr);
+        // Default to 1 page if parsing fails
+        pageCount = 1;
+      }
     } else if (file.mimetype.startsWith('image/')) {
       pageCount = 1;
     }
 
     // 2. Upload file to storage
-    const filePath = await uploadDocument(file);
+    let filePath;
+    try {
+      filePath = await uploadDocument(file);
+    } catch (storageErr) {
+      console.error('Storage upload error:', storageErr);
+      return res.status(500).json({ error: 'Failed to upload file to storage', details: storageErr.message });
+    }
 
     // 3. Generate PIN & Hash
     const { pin, hash } = await generatePin();
@@ -54,11 +66,23 @@ router.post('/', upload.single('file'), async (req, res) => {
     let priceData = {};
     let pinMode = 'open';
 
-    if (isPro && targetShopId) {
+    // Resolve shop IDs — convert empty strings to null
+    const resolvedTargetShopId = (targetShopId && targetShopId.trim() !== '') ? targetShopId.trim() : null;
+    const resolvedShopId = (shopId && shopId.trim() !== '') ? shopId.trim() : null;
+
+    if (isPro === 'true' && resolvedTargetShopId) {
       // Locked PIN: Pro student selected a specific shop
       pinMode = 'locked';
-      const exactPrice = await getExactPrice(targetShopId, pageCount, isColor, isDoubleSided, numCopies, colorPagesMap);
-      priceData = { price: exactPrice, priceMin: null, priceMax: null };
+      try {
+        const exactPrice = await getExactPrice(resolvedTargetShopId, pageCount, isColor, isDoubleSided, numCopies, colorPagesMap);
+        priceData = { price: exactPrice, priceMin: null, priceMax: null };
+      } catch (priceErr) {
+        console.error('Exact price error:', priceErr);
+        // Fallback to range pricing
+        const range = await getPriceRange(pageCount, isColor, isDoubleSided, numCopies, colorPagesMap);
+        priceData = { price: null, priceMin: range.min, priceMax: range.max };
+        pinMode = 'open';
+      }
     } else {
       // Open PIN: Show price range
       const range = await getPriceRange(pageCount, isColor, isDoubleSided, numCopies, colorPagesMap);
@@ -68,9 +92,12 @@ router.post('/', upload.single('file'), async (req, res) => {
     // For database storage, use exact price or average of range
     const priceCfa = priceData.price || Math.ceil((priceData.priceMin + priceData.priceMax) / 2);
 
+    // Determine which shop_id to store (null is valid for open PIN)
+    const finalShopId = resolvedTargetShopId || resolvedShopId || null;
+
     // 5. Save to database
-    const { data: job, error } = await supabase.from('jobs').insert([{
-      shop_id: targetShopId || shopId || null, // Allow null if no shop selected
+    const jobRecord = {
+      shop_id: finalShopId,
       user_email: user_email || null,
       raw_pin: pin,
       pin_hash: hash,
@@ -81,10 +108,17 @@ router.post('/', upload.single('file'), async (req, res) => {
       double_sided: isDoubleSided,
       copies: numCopies,
       price_cfa: priceCfa,
-      pin_mode: pinMode  // 'open' or 'locked'
-    }]).select().single();
+      pin_mode: pinMode
+    };
 
-    if (error) throw error;
+    console.log('Inserting job record:', { ...jobRecord, pin_hash: '[REDACTED]', raw_pin: '[REDACTED]' });
+
+    const { data: job, error } = await supabase.from('jobs').insert([jobRecord]).select().single();
+
+    if (error) {
+      console.error('Supabase job insert error:', error);
+      return res.status(500).json({ error: 'Failed to save job to database', details: error.message });
+    }
 
     res.json({
       pin,
@@ -97,7 +131,7 @@ router.post('/', upload.single('file'), async (req, res) => {
 
   } catch (err) {
     console.error('Upload Error:', err);
-    res.status(500).json({ error: 'Failed to process upload' });
+    res.status(500).json({ error: 'Failed to process upload', details: err.message });
   }
 });
 

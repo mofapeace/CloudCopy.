@@ -5,27 +5,22 @@ const router = express.Router();
 // Register new shop (operator signup)
 router.post('/register', async (req, res) => {
   try {
-    const { email, shopName, location, bwPrice, colorPrice } = req.body;
+    const { userId, email, shopName, location, bwPrice, colorPrice } = req.body;
 
     // Validate pricing
     if (!bwPrice || !colorPrice || bwPrice < 5 || colorPrice < 5) {
       return res.status(400).json({ error: 'Invalid pricing (minimum 5 CFA)' });
     }
 
-    // Get the user from Supabase auth
-    const { data: { users }, error: authError } = await supabase.auth.admin.listUsers();
-    if (authError) throw authError;
-
-    const user = users.find(u => u.email === email);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found. Please sign up first.' });
+    if (!userId) {
+      return res.status(400).json({ error: 'Missing userId' });
     }
 
     // Check if shop already exists for this user by checking operators table
     const { data: existingOperator } = await supabase
       .from('operators')
       .select('shop_id')
-      .eq('email', user.email)
+      .eq('email', email)
       .single();
 
     if (existingOperator) {
@@ -54,7 +49,7 @@ router.post('/register', async (req, res) => {
     const { error: operatorError } = await supabase
       .from('operators')
       .insert({
-        id: user.id, // Use auth user.id as operator id
+        id: userId, // Use auth user.id as operator id
         shop_id: shop.id,
         email: email
       });

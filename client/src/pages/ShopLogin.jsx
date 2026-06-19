@@ -18,19 +18,29 @@ export default function ShopLogin() {
   const [checkEmail, setCheckEmail] = useState(false);
 
   React.useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user?.user_metadata?.role === 'operator') {
-        navigate('/operator');
+    // On mount, check if already logged in as operator
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        try {
+          const roleRes = await api.post('/auth/check-role', { 
+            userId: session.user.id, 
+            email: session.user.email 
+          });
+          if (roleRes.data.role === 'operator') {
+            // Store operator info with real shopId
+            localStorage.setItem('cloudkopii_operator', JSON.stringify({
+              email: session.user.email,
+              shopId: roleRes.data.operator.shopId,
+              shopName: roleRes.data.shop?.name || '',
+              trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            }));
+            navigate('/operator');
+          }
+        } catch (err) {
+          console.error('Role check failed:', err);
+        }
       }
     });
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user?.user_metadata?.role === 'operator') {
-        navigate('/operator');
-      }
-    });
-
-    return () => authListener.subscription.unsubscribe();
   }, [navigate]);
 
   const handleAuth = async (e) => {
@@ -51,28 +61,34 @@ export default function ShopLogin() {
               colorPrice: parseInt(colorPrice, 10),
               role: 'operator' 
             },
-            emailRedirectTo: window.location.origin
+            emailRedirectTo: window.location.origin + '/operator/login'
           }
         });
         if (signUpError) throw signUpError;
 
-        // Create shop with pricing on backend
+        // Create shop + operator records on backend
+        let shopId = null;
         try {
-          await api.post('/shop/register', {
+          const shopRes = await api.post('/shop/register', {
+            userId: data.user.id,
             email,
             shopName,
             location,
             bwPrice: parseInt(bwPrice, 10),
             colorPrice: parseInt(colorPrice, 10)
           });
+          shopId = shopRes.data.shop?.id;
         } catch (shopErr) {
           console.error('Shop registration error:', shopErr);
-          // Continue anyway, user can manually register shop later
+          setError('Shop registration failed: ' + (shopErr.response?.data?.error || shopErr.message));
+          setLoading(false);
+          return;
         }
 
-        // Store operator session
+        // Store operator session with real shop ID
         localStorage.setItem('cloudkopii_operator', JSON.stringify({
           email,
+          shopId,
           shopName,
           bwPrice: parseInt(bwPrice, 10),
           colorPrice: parseInt(colorPrice, 10),
@@ -80,18 +96,40 @@ export default function ShopLogin() {
         }));
         setCheckEmail(true);
       } else {
+        // Login flow
         const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
 
-        // Check trial from stored data or mock
-        const stored = localStorage.getItem('cloudkopii_operator');
-        if (!stored) {
-          localStorage.setItem('cloudkopii_operator', JSON.stringify({
-            email,
-            trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-          }));
+        // Check role from backend database (source of truth)
+        try {
+          const roleRes = await api.post('/auth/check-role', { 
+            userId: data.user.id, 
+            email: data.user.email 
+          });
+
+          if (roleRes.data.role === 'operator') {
+            // Store operator info with real shopId from DB
+            localStorage.setItem('cloudkopii_operator', JSON.stringify({
+              email: data.user.email,
+              shopId: roleRes.data.operator.shopId,
+              shopName: roleRes.data.shop?.name || '',
+              trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            }));
+            navigate('/operator');
+          } else if (roleRes.data.role === 'student') {
+            // This person is a student, redirect them
+            setError('This account is registered as a student. Please use the student login.');
+            await supabase.auth.signOut();
+          } else {
+            // No role found in DB — might be unconfirmed or data was lost
+            setError('No operator account found for this email. Please register first.');
+            await supabase.auth.signOut();
+          }
+        } catch (roleErr) {
+          console.error('Role check failed:', roleErr);
+          setError('Failed to verify account role. Please try again.');
+          await supabase.auth.signOut();
         }
-        navigate('/operator');
       }
     } catch (err) {
       setError(err.message || 'Authentication failed');
