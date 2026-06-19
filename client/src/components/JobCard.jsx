@@ -1,5 +1,5 @@
 import React from 'react';
-import { Printer, FileText } from 'lucide-react';
+import { Printer, FileText, Eye } from 'lucide-react';
 import api from '../lib/api';
 
 export default function JobCard({ job, onRelease, disabled = false }) {
@@ -57,6 +57,19 @@ export default function JobCard({ job, onRelease, disabled = false }) {
           <div style={{ fontWeight: 600 }}>{job.copies}</div>
         </div>
       </div>
+
+      {job.fileUrl && (
+        <a 
+          href={job.fileUrl} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="btn btn-secondary" 
+          style={{ width: '100%', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+        >
+          <Eye size={18} />
+          Preview Document
+        </a>
+      )}
 
       <button className="btn btn-success" style={{ width: '100%' }} onClick={handleRelease} disabled={disabled}>
         <Printer size={18} />

@@ -1,5 +1,6 @@
 const express = require('express');
 const supabase = require('../supabase');
+const { getSignedUrl } = require('../services/storage');
 const router = express.Router();
 
 // Get job status by ID
@@ -17,6 +18,11 @@ router.get('/:jobId', async (req, res) => {
       return res.status(404).json({ error: 'Job not found' });
     }
 
+    let fileUrl = null;
+    if (job.file_path && job.file_path !== 'deleted') {
+      fileUrl = await getSignedUrl(job.file_path);
+    }
+
     res.json({
       id: job.id,
       studentName: job.student_name,
@@ -26,8 +32,11 @@ router.get('/:jobId', async (req, res) => {
       pageCount: job.page_count,
       color: job.color,
       copies: job.copies,
+      doubleSided: job.double_sided,
       price: job.price_cfa,
-      pinMode: job.pin_mode
+      pinMode: job.pin_mode,
+      studentConfirmed: job.student_confirmed,
+      fileUrl: fileUrl
     });
 
   } catch (err) {

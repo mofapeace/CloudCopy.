@@ -56,12 +56,23 @@ export default function OperatorDashboard() {
   useEffect(() => {
     let interval;
     if (job && !job.studentConfirmed) {
-      interval = setInterval(() => {
-        handleInitialVerify();
+      interval = setInterval(async () => {
+        try {
+          const res = await api.get(`/job/${job.id}`);
+          if (res.data) {
+            setJob(prev => ({ 
+              ...prev, 
+              studentConfirmed: res.data.studentConfirmed,
+              twoFAVerified: res.data.twoFAVerified
+            }));
+          }
+        } catch (err) {
+          console.error('Polling error', err);
+        }
       }, 3000);
     }
     return () => clearInterval(interval);
-  }, [job, pin, shopId]);
+  }, [job]);
 
   const handleRelease = () => {
     setJob(null);
@@ -161,14 +172,22 @@ export default function OperatorDashboard() {
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: job.studentConfirmed ? 'var(--accent-success)' : 'var(--accent-warning)', display: 'inline-block' }} />
             {job.studentConfirmed ? 'Job Ready to Release' : 'Waiting for Student Confirmation...'}
           </h3>
+
+          {!job.studentConfirmed && job.twoFARequired && job.twoFACode && (
+             <div style={{ marginBottom: '1.5rem', textAlign: 'center', padding: '1.5rem', background: 'rgba(0,122,255,0.05)', border: '2px dashed rgba(0,122,255,0.3)', borderRadius: '12px' }}>
+               <h4 style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem', fontWeight: 500 }}>Give this 6-digit code to the student:</h4>
+               <div style={{ fontSize: '2.5rem', letterSpacing: '0.25em', fontWeight: 700, color: 'var(--accent-primary)', fontFamily: 'monospace' }}>
+                 {job.twoFACode}
+               </div>
+               <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+                 They need to enter this in their app to confirm the print details and price.
+               </p>
+             </div>
+          )}
+
           <div style={{ opacity: job.studentConfirmed ? 1 : 0.6, pointerEvents: job.studentConfirmed ? 'auto' : 'none' }}>
             <JobCard job={job} onRelease={handleRelease} />
           </div>
-          {!job.studentConfirmed && (
-             <div style={{ marginTop: '1rem', textAlign: 'center', color: 'var(--accent-warning)', fontSize: '0.9rem' }}>
-               Please ask the student to click "Confirm Print" in their account.
-             </div>
-          )}
         </div>
       )}
 

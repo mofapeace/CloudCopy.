@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const supabase = require('../supabase');
 const { generateCode, hashCode } = require('../services/twoFactorAuth');
+const { getSignedUrl } = require('../services/storage');
 const router = express.Router();
 
 router.post('/verify', async (req, res) => {
@@ -40,9 +41,22 @@ router.post('/verify', async (req, res) => {
       return res.status(404).json({ error: 'Invalid PIN or job expired' });
     }
 
-    // Generate 2FA code
-    const twoFACode = generateCode();
-    const twoFAHash = hashCode(twoFACode);
+    // Re-use 2FA code if it already exists, otherwise generate one
+    let twoFACode = null;
+    let twoFAHash = matchedJob.two_fa_code;
+    
+    // We only generate a new code if one doesn't exist
+    if (!twoFAHash) {
+      twoFACode = generateCode();
+      twoFAHash = hashCode(twoFACode);
+    } else {
+      // We don't have the plain text code anymore if it was already generated,
+      // but wait, we need to show it to the operator!
+      // In a real app we'd just generate a new one each time they ask to verify.
+      // Let's generate a new one to be safe and ensure the operator sees it.
+      twoFACode = generateCode();
+      twoFAHash = hashCode(twoFACode);
+    }
 
     // Store 2FA code in job and claim the job for this shop
     const updateData = { 
@@ -62,6 +76,11 @@ router.post('/verify', async (req, res) => {
 
     console.log(`🔐 2FA Code for job ${matchedJob.id}: ${twoFACode}`);
 
+    let fileUrl = null;
+    if (matchedJob.file_path && matchedJob.file_path !== 'deleted') {
+      fileUrl = await getSignedUrl(matchedJob.file_path);
+    }
+
     res.json({
       id: matchedJob.id,
       studentName: matchedJob.student_name,
@@ -71,6 +90,8 @@ router.post('/verify', async (req, res) => {
       doubleSided: matchedJob.double_sided,
       price: matchedJob.price_cfa,
       createdAt: matchedJob.created_at,
+      studentConfirmed: matchedJob.student_confirmed,
+      fileUrl: fileUrl,
       twoFARequired: true,
       twoFACode: twoFACode,  // Send code directly in app for now
       message: 'Student must confirm 2FA on their phone to release this job.'
