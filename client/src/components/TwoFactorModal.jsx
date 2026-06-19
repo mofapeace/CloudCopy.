@@ -72,9 +72,6 @@ export default function TwoFactorModal({ isOpen, onClose, onVerify }) {
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
             Enter the 6-digit security code
           </p>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', marginTop: '0.25rem' }}>
-            (Demo code: <strong style={{ color: 'var(--accent-primary)' }}>123456</strong>)
-          </p>
         </div>
         
         <form onSubmit={handleSubmit}>
