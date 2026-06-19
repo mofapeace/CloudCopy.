@@ -42,37 +42,34 @@ router.post('/verify', async (req, res) => {
     }
 
     // Re-use 2FA code if it already exists, otherwise generate one
-    let twoFACode = null;
-    let twoFAHash = matchedJob.two_fa_code;
+    let twoFACode = matchedJob.two_fa_code;
     
     // We only generate a new code if one doesn't exist
-    if (!twoFAHash) {
+    if (!twoFACode) {
       twoFACode = generateCode();
-      twoFAHash = hashCode(twoFACode);
+      
+      // Store 2FA code in job and claim the job for this shop
+      const updateData = { 
+        two_fa_code: twoFACode, 
+        two_fa_verified: false 
+      };
+      
+      // If the job was open (no shop), claim it for this shop now
+      if (!matchedJob.shop_id) {
+        updateData.shop_id = shopId;
+      }
+
+      await supabase
+        .from('jobs')
+        .update(updateData)
+        .eq('id', matchedJob.id);
+        
+      console.log(`🔐 Generated NEW 2FA Code for job ${matchedJob.id}: ${twoFACode}`);
     } else {
-      // We don't have the plain text code anymore if it was already generated,
-      // but wait, we need to show it to the operator!
-      // In a real app we'd just generate a new one each time they ask to verify.
-      // Let's generate a new one to be safe and ensure the operator sees it.
-      twoFACode = generateCode();
-      twoFAHash = hashCode(twoFACode);
+      console.log(`🔐 Re-using existing 2FA Code for job ${matchedJob.id}: ${twoFACode}`);
     }
-
-    // Store 2FA code in job and claim the job for this shop
-    const updateData = { 
-      two_fa_code: twoFAHash, 
-      two_fa_verified: false 
-    };
     
-    // If the job was open (no shop), claim it for this shop now
-    if (!matchedJob.shop_id) {
-      updateData.shop_id = shopId;
-    }
 
-    await supabase
-      .from('jobs')
-      .update(updateData)
-      .eq('id', matchedJob.id);
 
     console.log(`🔐 2FA Code for job ${matchedJob.id}: ${twoFACode}`);
 
@@ -123,12 +120,11 @@ router.post('/confirm-2fa', async (req, res) => {
       return res.status(404).json({ error: 'Job not found' });
     }
 
-    // Verify 2FA code (simple SHA256 comparison)
-    const crypto = require('crypto');
-    const inputHash = crypto.createHash('sha256').update(twoFACode).digest('hex');
+    // Verify 2FA code
+    const { verifyCode } = require('../services/twoFactorAuth');
     
-    if (inputHash !== job.two_fa_code) {
-      return res.status(401).json({ error: 'Invalid 2FA code' });
+    if (!verifyCode(twoFACode, job.two_fa_code)) {
+      return res.status(401).json({ error: 'Invalid 2FA code. Please try again.' });
     }
 
     // Mark 2FA as verified and student as confirmed

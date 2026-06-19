@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Shield, X } from 'lucide-react';
 
-export default function TwoFactorModal({ isOpen, onClose, onVerify }) {
+export default function TwoFactorModal({ isOpen, onClose, onVerify, error, loading }) {
   const [digits, setDigits] = useState(['', '', '', '', '', '']);
   const inputRefs = useRef([]);
 
@@ -74,6 +74,12 @@ export default function TwoFactorModal({ isOpen, onClose, onVerify }) {
           </p>
         </div>
         
+        {error && (
+          <div style={{ marginBottom: '1.5rem', padding: '0.75rem', background: 'rgba(255,59,48,0.1)', color: 'var(--accent-danger)', borderRadius: 'var(--radius-md)', textAlign: 'center', fontSize: '0.9rem' }}>
+            {error}
+          </div>
+        )}
+        
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', marginBottom: '1.5rem' }}>
             {digits.map((digit, i) => (
@@ -106,8 +112,10 @@ export default function TwoFactorModal({ isOpen, onClose, onVerify }) {
           </div>
 
           <div style={{ display: 'flex', gap: '0.75rem' }}>
-            <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={onClose}>Cancel</button>
-            <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={code.length < 6}>Verify</button>
+            <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={onClose} disabled={loading}>Cancel</button>
+            <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={code.length < 6 || loading}>
+              {loading ? 'Verifying...' : 'Verify'}
+            </button>
           </div>
         </form>
       </div>

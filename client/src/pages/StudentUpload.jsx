@@ -308,6 +308,8 @@ export default function StudentUpload() {
           isOpen={show2FA}
           onVerify={handleConfirmTwoFA}
           onClose={() => { setShow2FA(false); setTwoFAError(''); }}
+          error={twoFAError}
+          loading={confirmingTwoFA}
         />
 
         <div style={{ textAlign: 'center', marginTop: '2rem' }}>

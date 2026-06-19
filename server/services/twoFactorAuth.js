@@ -11,15 +11,15 @@ function generateCode() {
  * Hashes 2FA code for storage (not as critical as PIN, but good practice)
  */
 function hashCode(code) {
-  return crypto.createHash('sha256').update(code).digest('hex');
+  // We no longer hash the 6-digit code so we can return it safely to the operator
+  return code;
 }
 
 /**
  * Verifies 2FA code against hash
  */
 function verifyCode(inputCode, storedHash) {
-  const inputHash = crypto.createHash('sha256').update(inputCode).digest('hex');
-  return inputHash === storedHash;
+  return inputCode === storedHash;
 }
 
 module.exports = { generateCode, hashCode, verifyCode };
