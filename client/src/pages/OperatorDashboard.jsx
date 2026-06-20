@@ -80,8 +80,15 @@ export default function OperatorDashboard() {
   }, [job]);
 
   const handleRelease = () => {
+    // We don't setJob(null) here anymore! We just refresh the queue.
+    setJob(prev => ({ ...prev, status: 'printing' }));
+    fetchQueue();
+  };
+
+  const handleComplete = () => {
     setJob(null);
     setPin('');
+    fetchQueue();
   };
 
   const handleLogout = async () => {
@@ -192,7 +199,7 @@ export default function OperatorDashboard() {
           )}
 
           <div style={{ opacity: job.studentConfirmed ? 1 : 0.6, pointerEvents: job.studentConfirmed ? 'auto' : 'none' }}>
-            <JobCard job={job} onRelease={handleRelease} />
+            <JobCard job={job} onRelease={handleRelease} onComplete={handleComplete} />
           </div>
         </div>
       )}
@@ -205,7 +212,27 @@ export default function OperatorDashboard() {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             {queue.map(qJob => (
-              <div key={qJob.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', background: 'rgba(0,0,0,0.03)', borderRadius: '8px' }}>
+              <div 
+                key={qJob.id} 
+                onClick={async () => {
+                  try {
+                    const res = await api.get(`/job/${qJob.id}`);
+                    setJob(res.data);
+                  } catch (err) {
+                    setError('Failed to load job details');
+                  }
+                }}
+                style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  padding: '1rem', 
+                  background: 'rgba(0,0,0,0.03)', 
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  border: job?.id === qJob.id ? '2px solid var(--accent-primary)' : '2px solid transparent',
+                  transition: 'var(--transition)'
+                }}
+              >
                 <div>
                   <strong>{qJob.student_name}</strong>
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
@@ -214,8 +241,8 @@ export default function OperatorDashboard() {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <strong>{qJob.price_cfa} CFA</strong>
-                  <div style={{ fontSize: '0.8rem', color: qJob.student_confirmed ? 'var(--accent-success)' : 'var(--text-secondary)' }}>
-                    {qJob.student_confirmed ? 'Confirmed' : 'Waiting for student'}
+                  <div style={{ fontSize: '0.8rem', color: qJob.status === 'printing' ? 'var(--accent-primary)' : qJob.student_confirmed ? 'var(--accent-success)' : 'var(--text-secondary)' }}>
+                    {qJob.status === 'printing' ? 'Printing...' : qJob.student_confirmed ? 'Confirmed' : 'Waiting for student'}
                   </div>
                 </div>
               </div>

@@ -82,6 +82,12 @@ export default function StudentDashboard() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
+          <div style={{ background: 'rgba(255, 149, 0, 0.1)', border: '1px solid rgba(255, 149, 0, 0.2)', padding: '0.75rem', borderRadius: 'var(--radius-md)', color: 'var(--text-secondary)', fontSize: '0.85rem', display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+            <span style={{ fontSize: '1rem' }}>⚠️</span>
+            <div>
+              <strong>Don't forget!</strong> Your 4-digit PIN is required to print at the shop. Any unprinted jobs are automatically wiped from the system after 12 hours for security.
+            </div>
+          </div>
           {pendingJobs.map(job => (
             <div key={job.id} className="glass-card" style={{ position: 'relative' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>

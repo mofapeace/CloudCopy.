@@ -186,4 +186,25 @@ router.post('/release', async (req, res) => {
   }
 });
 
+// Complete job (operator marks physical print as done)
+router.post('/complete', async (req, res) => {
+  try {
+    const { jobId } = req.body;
+    
+    const { data: job, error } = await supabase
+      .from('jobs')
+      .update({ status: 'printed', printed_at: new Date().toISOString() })
+      .eq('id', jobId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({ message: 'Job marked as completed', job });
+  } catch (err) {
+    console.error('Complete Error:', err);
+    res.status(500).json({ error: 'Failed to complete job' });
+  }
+});
+
 module.exports = router;

@@ -2,13 +2,22 @@ import React from 'react';
 import { Printer, FileText, Eye } from 'lucide-react';
 import api from '../lib/api';
 
-export default function JobCard({ job, onRelease, disabled = false }) {
+export default function JobCard({ job, onRelease, onComplete, disabled = false }) {
   const handleRelease = async () => {
     try {
       await api.post('/pin/release', { jobId: job.id });
       onRelease(job.id);
     } catch (err) {
       alert('Failed to release job: ' + err.message);
+    }
+  };
+
+  const handleComplete = async () => {
+    try {
+      await api.post('/pin/complete', { jobId: job.id });
+      if (onComplete) onComplete(job.id);
+    } catch (err) {
+      alert('Failed to complete job: ' + err.message);
     }
   };
 
@@ -71,10 +80,16 @@ export default function JobCard({ job, onRelease, disabled = false }) {
         </a>
       )}
 
-      <button className="btn btn-success" style={{ width: '100%' }} onClick={handleRelease} disabled={disabled}>
-        <Printer size={18} />
-        {disabled ? 'Waiting for Student...' : 'Release to Printer'}
-      </button>
+      {job.status === 'printing' ? (
+        <button className="btn btn-primary" style={{ width: '100%', background: 'var(--accent-primary)' }} onClick={handleComplete}>
+          Mark as Completed
+        </button>
+      ) : (
+        <button className="btn btn-success" style={{ width: '100%' }} onClick={handleRelease} disabled={disabled}>
+          <Printer size={18} />
+          {disabled ? 'Waiting for Student...' : 'Release to Printer'}
+        </button>
+      )}
     </div>
   );
 }

@@ -29,7 +29,7 @@ router.get('/shop/:shopId', async (req, res) => {
       .from('jobs')
       .select('id, student_name, page_count, color, double_sided, copies, price_cfa, status, created_at, student_confirmed')
       .eq('shop_id', shopId)
-      .eq('status', 'pending')
+      .in('status', ['pending', 'printing'])
       .order('created_at', { ascending: true });
 
     if (error) throw error;
