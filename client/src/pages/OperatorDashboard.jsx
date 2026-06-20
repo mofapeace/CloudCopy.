@@ -4,6 +4,7 @@ import { LogOut, Shield } from 'lucide-react';
 import JobCard from '../components/JobCard';
 import OfflineToggle from '../components/OfflineToggle';
 import api from '../lib/api';
+import { supabase } from '../lib/supabase';
 
 export default function OperatorDashboard() {
   const navigate = useNavigate();
@@ -83,7 +84,8 @@ export default function OperatorDashboard() {
     setPin('');
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     localStorage.removeItem('cloudkopii_operator');
     navigate('/operator/login');
   };

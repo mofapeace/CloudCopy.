@@ -58,7 +58,7 @@ export default function JobCard({ job, onRelease, disabled = false }) {
         </div>
       </div>
 
-      {job.fileUrl && (
+      {!disabled && job.fileUrl && (
         <a 
           href={job.fileUrl} 
           target="_blank" 
