@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Store, Mail, Lock, ArrowRight, Gift, CheckCircle } from 'lucide-react';
+import { Store, Mail, Lock, ArrowRight, Gift, CheckCircle, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import api from '../lib/api';
 
@@ -16,6 +16,7 @@ export default function ShopLogin() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [checkEmail, setCheckEmail] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   React.useEffect(() => {
     // On mount, check if already logged in as operator
@@ -309,16 +310,23 @@ export default function ShopLogin() {
 
           <div style={{ position: 'relative' }}>
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               className="input-field"
               placeholder="Password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
               minLength={6}
-              style={{ paddingLeft: '2.75rem' }}
+              style={{ paddingLeft: '2.75rem', paddingRight: '2.75rem' }}
             />
             <Lock size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
 
           {error && (
