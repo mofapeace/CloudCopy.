@@ -9,6 +9,7 @@ import OperatorDashboard from './pages/OperatorDashboard';
 import ShopLogin from './pages/ShopLogin';
 import ShopMap from './pages/ShopMap';
 import ResetPassword from './pages/ResetPassword';
+import { Toaster } from 'react-hot-toast';
 import './index.css';
 
 function NavLink({ to, children }) {
@@ -121,6 +122,33 @@ function AppRouter() {
 function App() {
   return (
     <BrowserRouter>
+      <Toaster 
+        position="top-center"
+        toastOptions={{
+          style: {
+            background: 'rgba(255, 255, 255, 0.8)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid var(--border-color)',
+            color: 'var(--text-primary)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
+            borderRadius: '12px',
+            padding: '12px 16px',
+            fontSize: '0.95rem'
+          },
+          success: {
+            iconTheme: {
+              primary: 'var(--accent-success)',
+              secondary: 'white',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: 'var(--accent-danger)',
+              secondary: 'white',
+            },
+          },
+        }}
+      />
       <AppRouter />
     </BrowserRouter>
   );

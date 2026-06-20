@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import api from '../lib/api';
 import { FileText, Edit2, CheckCircle, Clock } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function StudentDashboard() {
   const navigate = useNavigate();
@@ -40,8 +41,9 @@ export default function StudentDashboard() {
     try {
       await api.post(`/jobs/${id}/confirm`);
       setJobs(jobs.map(j => j.id === id ? { ...j, student_confirmed: true } : j));
+      toast.success('Print confirmed!');
     } catch (err) {
-      alert('Failed to confirm job.');
+      toast.error('Failed to confirm job.');
     }
   };
 
@@ -50,8 +52,9 @@ export default function StudentDashboard() {
       const res = await api.patch(`/jobs/${id}`, editForm);
       setJobs(jobs.map(j => j.id === id ? { ...j, ...res.data } : j));
       setEditingJob(null);
+      toast.success('Job updated successfully');
     } catch (err) {
-      alert('Failed to update job.');
+      toast.error('Failed to update job.');
     }
   };
 

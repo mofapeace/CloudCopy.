@@ -1,5 +1,6 @@
 import React from 'react';
 import { Printer, FileText, Eye } from 'lucide-react';
+import toast from 'react-hot-toast';
 import api from '../lib/api';
 
 export default function JobCard({ job, onRelease, onComplete, disabled = false }) {
@@ -7,8 +8,9 @@ export default function JobCard({ job, onRelease, onComplete, disabled = false }
     try {
       await api.post('/pin/release', { jobId: job.id });
       onRelease(job.id);
+      toast.success('Job released to printer!');
     } catch (err) {
-      alert('Failed to release job: ' + err.message);
+      toast.error('Failed to release job: ' + err.message);
     }
   };
 
@@ -16,8 +18,9 @@ export default function JobCard({ job, onRelease, onComplete, disabled = false }
     try {
       await api.post('/pin/complete', { jobId: job.id });
       if (onComplete) onComplete(job.id);
+      toast.success('Job marked as completed!');
     } catch (err) {
-      alert('Failed to complete job: ' + err.message);
+      toast.error('Failed to complete job: ' + err.message);
     }
   };
 
