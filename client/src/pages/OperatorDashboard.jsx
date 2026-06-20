@@ -10,7 +10,7 @@ export default function OperatorDashboard() {
   const [pin, setPin] = useState('');
   const [job, setJob] = useState(null);
   const [error, setError] = useState('');
-  const [shopId] = useState('00000000-0000-0000-0000-000000000000');
+  const [shopId, setShopId] = useState('');
   const [operatorInfo, setOperatorInfo] = useState(null);
   const [trialDaysLeft, setTrialDaysLeft] = useState(null);
   const [queue, setQueue] = useState([]);
@@ -20,6 +20,9 @@ export default function OperatorDashboard() {
     if (stored) {
       const info = JSON.parse(stored);
       setOperatorInfo(info);
+      if (info.shopId) {
+        setShopId(info.shopId);
+      }
       const trialEnd = new Date(info.trialEndsAt);
       const now = new Date();
       const daysLeft = Math.max(0, Math.ceil((trialEnd - now) / (1000 * 60 * 60 * 24)));
@@ -29,6 +32,7 @@ export default function OperatorDashboard() {
   }, [shopId]);
 
   const fetchQueue = async () => {
+    if (!shopId) return;
     try {
       const res = await api.get(`/jobs/shop/${shopId}`);
       setQueue(res.data);

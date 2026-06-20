@@ -59,10 +59,15 @@ router.post('/verify', async (req, res) => {
         updateData.shop_id = shopId;
       }
 
-      await supabase
+      const { error: updateError } = await supabase
         .from('jobs')
         .update(updateData)
         .eq('id', matchedJob.id);
+        
+      if (updateError) {
+        console.error('Failed to save 2FA code:', updateError);
+        throw updateError;
+      }
         
       console.log(`🔐 Generated NEW 2FA Code for job ${matchedJob.id}: ${twoFACode}`);
     } else {
