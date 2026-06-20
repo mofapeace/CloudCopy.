@@ -49,13 +49,13 @@ export default function StudentLogin() {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
-          options: { 
+          options: {
             data: { name, role: 'student' },
             emailRedirectTo: window.location.origin + '/login'
           }
         });
         if (signUpError) throw signUpError;
-        
+
         // Register student in backend database
         if (data.user) {
           try {
@@ -193,8 +193,8 @@ export default function StudentLogin() {
             <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
               We've sent a {mode === 'forgot_password' ? 'password reset' : 'confirmation'} link to <strong>{email}</strong>. Please click the link to continue.
             </p>
-            <button 
-              className="btn btn-secondary" 
+            <button
+              className="btn btn-secondary"
               onClick={() => {
                 setCheckEmail(false);
                 setMode('login');
@@ -206,93 +206,91 @@ export default function StudentLogin() {
           </div>
         ) : (
           <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {mode === 'signup' && (
+            {mode === 'signup' && (
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Full Name"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  required
+                  style={{ paddingLeft: '2.75rem' }}
+                />
+                <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }}>👤</span>
+              </div>
+            )}
+
             <div style={{ position: 'relative' }}>
               <input
-                type="text"
+                type="email"
                 className="input-field"
-                placeholder="Full Name"
-                value={name}
-                onChange={e => setName(e.target.value)}
+                placeholder="Email address"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
                 required
                 style={{ paddingLeft: '2.75rem' }}
               />
-              <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }}>👤</span>
+              <Mail size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
             </div>
-          )}
 
-          <div style={{ position: 'relative' }}>
-            <input
-              type="email"
-              className="input-field"
-              placeholder="Email address"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              required
-              style={{ paddingLeft: '2.75rem' }}
-            />
-            <Mail size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
-          </div>
+            {mode !== 'forgot_password' && (
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className="input-field"
+                  placeholder="Password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  style={{ paddingLeft: '2.75rem', paddingRight: '2.75rem' }}
+                />
+                <Lock size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            )}
 
-          </div>
+            {mode === 'login' && (
+              <div style={{ textAlign: 'right', marginTop: '-0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => { setMode('forgot_password'); setError(''); }}
+                  style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.85rem', cursor: 'pointer', padding: 0 }}
+                >
+                  Forgot Password?
+                </button>
+              </div>
+            )}
 
-          {mode !== 'forgot_password' && (
-            <div style={{ position: 'relative' }}>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                className="input-field"
-                placeholder="Password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                minLength={6}
-                style={{ paddingLeft: '2.75rem', paddingRight: '2.75rem' }}
-              />
-              <Lock size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
-            </div>
-          )}
+            {error && (
+              <div style={{ background: 'rgba(255,59,48,0.08)', border: '1px solid rgba(255,59,48,0.2)', borderRadius: 'var(--radius-md)', padding: '0.75rem', color: 'var(--accent-danger)', fontSize: '0.9rem' }}>
+                {error}
+              </div>
+            )}
 
-          {mode === 'login' && (
-            <div style={{ textAlign: 'right', marginTop: '-0.5rem' }}>
-              <button
-                type="button"
-                onClick={() => { setMode('forgot_password'); setError(''); }}
-                style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '0.85rem', cursor: 'pointer', padding: 0 }}
-              >
-                Forgot Password?
-              </button>
-            </div>
-          )}
-
-          {error && (
-            <div style={{ background: 'rgba(255,59,48,0.08)', border: '1px solid rgba(255,59,48,0.2)', borderRadius: 'var(--radius-md)', padding: '0.75rem', color: 'var(--accent-danger)', fontSize: '0.9rem' }}>
-              {error}
-            </div>
-          )}
-
-          <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.25rem' }} disabled={loading}>
-            {loading ? 'Please wait...' : mode === 'signup' ? 'Create Account' : mode === 'forgot_password' ? 'Send Reset Link' : 'Log In'}
-            {!loading && <ArrowRight size={18} />}
-          </button>
-          
-          {mode === 'forgot_password' && (
-            <button 
-              type="button" 
-              className="btn btn-secondary" 
-              style={{ width: '100%' }} 
-              onClick={() => { setMode('login'); setError(''); }}
-            >
-              Back to Login
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.25rem' }} disabled={loading}>
+              {loading ? 'Please wait...' : mode === 'signup' ? 'Create Account' : mode === 'forgot_password' ? 'Send Reset Link' : 'Log In'}
+              {!loading && <ArrowRight size={18} />}
             </button>
-          )}
-        </form>
+
+            {mode === 'forgot_password' && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                style={{ width: '100%' }}
+                onClick={() => { setMode('login'); setError(''); }}
+              >
+                Back to Login
+              </button>
+            )}
+          </form>
         )}
 
         {!isLocked && (
