@@ -96,6 +96,12 @@ export default function ShopLogin() {
           trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
         }));
         setCheckEmail(true);
+      } else if (mode === 'forgot_password') {
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/reset-password',
+        });
+        if (resetError) throw resetError;
+        setCheckEmail(true);
       } else {
         // Login flow
         const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
@@ -213,7 +219,7 @@ export default function ShopLogin() {
             </div>
             <h3 style={{ marginBottom: '0.5rem', fontSize: '1.25rem' }}>Check your email</h3>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-              We've sent a confirmation link to <strong>{email}</strong>. Please click the link to verify your operator account and start your trial.
+              We've sent a {mode === 'forgot_password' ? 'password reset' : 'confirmation'} link to <strong>{email}</strong>. Please click the link to continue.
             </p>
             <button 
               className="btn btn-primary" 
@@ -307,27 +313,41 @@ export default function ShopLogin() {
             />
             <Mail size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
           </div>
+          
+          {mode !== 'forgot_password' && (
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                className="input-field"
+                placeholder="Password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                minLength={6}
+                style={{ paddingLeft: '2.75rem', paddingRight: '2.75rem' }}
+              />
+              <Lock size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          )}
 
-          <div style={{ position: 'relative' }}>
-            <input
-              type={showPassword ? 'text' : 'password'}
-              className="input-field"
-              placeholder="Password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              required
-              minLength={6}
-              style={{ paddingLeft: '2.75rem', paddingRight: '2.75rem' }}
-            />
-            <Lock size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
+          {mode === 'login' && (
+            <div style={{ textAlign: 'right', marginTop: '-0.5rem' }}>
+              <button
+                type="button"
+                onClick={() => { setMode('forgot_password'); setError(''); }}
+                style={{ background: 'none', border: 'none', color: 'var(--accent-secondary)', fontSize: '0.85rem', cursor: 'pointer', padding: 0 }}
+              >
+                Forgot Password?
+              </button>
+            </div>
+          )}
 
           {error && (
             <div style={{ background: 'rgba(255,59,48,0.08)', border: '1px solid rgba(255,59,48,0.2)', borderRadius: 'var(--radius-md)', padding: '0.75rem', color: 'var(--accent-danger)', fontSize: '0.9rem' }}>
@@ -336,9 +356,20 @@ export default function ShopLogin() {
           )}
 
           <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.25rem', background: 'var(--accent-secondary)' }} disabled={loading}>
-            {loading ? 'Please wait...' : mode === 'register' ? 'Register & Start Trial' : 'Sign In'}
+            {loading ? 'Please wait...' : mode === 'register' ? 'Register & Start Trial' : mode === 'forgot_password' ? 'Send Reset Link' : 'Sign In'}
             {!loading && <ArrowRight size={18} />}
           </button>
+          
+          {mode === 'forgot_password' && (
+            <button 
+              type="button" 
+              className="btn btn-secondary" 
+              style={{ width: '100%' }} 
+              onClick={() => { setMode('login'); setError(''); }}
+            >
+              Back to Login
+            </button>
+          )}
         </form>
         )}
       </div>

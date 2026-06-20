@@ -8,6 +8,7 @@ import StudentDashboard from './pages/StudentDashboard';
 import OperatorDashboard from './pages/OperatorDashboard';
 import ShopLogin from './pages/ShopLogin';
 import ShopMap from './pages/ShopMap';
+import ResetPassword from './pages/ResetPassword';
 import './index.css';
 
 function NavLink({ to, children }) {
@@ -100,6 +101,7 @@ function AppRouter() {
           <Route path="/map" element={<ShopMap />} />
           <Route path="/operator/login" element={<ShopLogin />} />
           <Route path="/operator" element={<OperatorDashboard />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       </main>
 
